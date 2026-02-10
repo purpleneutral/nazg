@@ -1,0 +1,40 @@
+# Build artifacts
+build/
+build-*/
+compile_commands.json
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Runtime / logs
+logs/
+*.log
+
+# Cache
+.cache/
+
+# Temporary / test artifacts
+.tmp/
+
+# Node.js (not part of C++ project)
+node_modules/
+package.json
+package-lock.json
+
+# Python virtualenvs
+.venv/
+__pycache__/
+*.pyc
+
+# AI tooling
+.claude/
+
+# Separate sub-projects (tracked independently)
+controlCenter/
+ctrlCore/
+midEarth/
