@@ -2,6 +2,8 @@
 #include "brain/pattern_matcher.hpp"
 #include "blackbox/logger.hpp"
 #include "nexus/store.hpp"
+#include "task/executor.hpp"
+#include "workspace/manager.hpp"
 #include <algorithm>
 #include <chrono>
 #include <sstream>
@@ -36,7 +38,7 @@ RecoverySuggester::suggest_recovery(int64_t project_id, int64_t failure_id,
   // Strategy 1: Get suggestions from matching patterns
   if (matcher_) {
     auto patterns = matcher_->find_matching_patterns(
-        project_id, error_signature, failure_type, 0.7);
+        project_id, error_signature, failure_type, 0.7, error_message);
 
     for (const auto &pattern : patterns) {
       auto pattern_suggestions =
@@ -184,9 +186,16 @@ RecoverySuggester::auto_recover(int64_t project_id, int64_t failure_id,
 
 bool RecoverySuggester::verify_recovery(int64_t project_id,
                                          const std::string &original_command) {
-  // This would re-run the original command to verify the fix
-  // For now, return true (verification will be implemented with task module)
-  return true;
+  if (!executor_ || original_command.empty()) {
+    return true; // No executor or command to verify against
+  }
+
+  if (log_) {
+    log_->info("Brain", "Verifying recovery by re-running: " + original_command);
+  }
+
+  auto result = executor_->execute_shell(original_command);
+  return result.success;
 }
 
 std::vector<RecoverySuggester::RecoveryAction>
@@ -434,37 +443,132 @@ RecoverySuggester::create_custom_command_action(const std::string &command,
 bool RecoverySuggester::execute_restore_files(const RecoveryAction &action,
                                                int64_t project_id,
                                                RecoveryResult &result) {
-  // This will be implemented with workspace module integration
-  result.actions_taken.push_back("Would restore files (not yet implemented)");
-  result.output_log = "File restoration requires workspace module integration";
-  return false;
+  if (!workspace_mgr_) {
+    result.errors.push_back("No workspace manager configured");
+    return false;
+  }
+
+  auto it = action.params.find("snapshot_id");
+  if (it == action.params.end()) {
+    result.errors.push_back("No snapshot_id in action params");
+    return false;
+  }
+
+  int64_t snapshot_id = std::stoll(it->second);
+
+  workspace::Manager::RestoreOptions opts;
+  opts.restore_type = "partial";
+  opts.dry_run = false;
+  opts.interactive = false;
+
+  if (log_) {
+    log_->info("Brain", "Restoring files from snapshot #" + std::to_string(snapshot_id));
+  }
+
+  auto restore_result = workspace_mgr_->restore(project_id, snapshot_id, opts);
+  result.actions_taken.push_back("Restored " + std::to_string(restore_result.files_restored) + " files from snapshot #" + std::to_string(snapshot_id));
+  result.output_log = "Partial restore: " + std::to_string(restore_result.files_restored) + " files restored, " + std::to_string(restore_result.files_skipped) + " skipped";
+
+  for (const auto &err : restore_result.errors) {
+    result.errors.push_back(err);
+  }
+
+  return restore_result.success;
 }
 
 bool RecoverySuggester::execute_restore_snapshot(const RecoveryAction &action,
                                                   int64_t project_id,
                                                   RecoveryResult &result) {
-  // This will be implemented with workspace module integration
-  result.actions_taken.push_back("Would restore snapshot (not yet implemented)");
-  result.output_log = "Snapshot restoration requires workspace module integration";
-  return false;
+  if (!workspace_mgr_) {
+    result.errors.push_back("No workspace manager configured");
+    return false;
+  }
+
+  auto it = action.params.find("snapshot_id");
+  if (it == action.params.end()) {
+    result.errors.push_back("No snapshot_id in action params");
+    return false;
+  }
+
+  int64_t snapshot_id = std::stoll(it->second);
+
+  workspace::Manager::RestoreOptions opts;
+  opts.restore_type = "full";
+  opts.dry_run = false;
+  opts.interactive = false;
+
+  if (log_) {
+    log_->info("Brain", "Full restore from snapshot #" + std::to_string(snapshot_id));
+  }
+
+  auto restore_result = workspace_mgr_->restore(project_id, snapshot_id, opts);
+  result.actions_taken.push_back("Full restore from snapshot #" + std::to_string(snapshot_id));
+  result.output_log = "Full restore: " + std::to_string(restore_result.files_restored) + " files restored";
+
+  for (const auto &err : restore_result.errors) {
+    result.errors.push_back(err);
+  }
+
+  return restore_result.success;
 }
 
 bool RecoverySuggester::execute_clean_build(const RecoveryAction &action,
                                              int64_t project_id,
                                              RecoveryResult &result) {
-  // This would clean build directory and rebuild
-  result.actions_taken.push_back("Would clean build (not yet implemented)");
-  result.output_log = "Clean build requires task module integration";
-  return false;
+  if (!executor_) {
+    result.errors.push_back("No executor configured");
+    return false;
+  }
+
+  if (log_) {
+    log_->info("Brain", "Executing clean build: rm -rf build && cmake -S . -B build && cmake --build build");
+  }
+
+  auto exec_result = executor_->execute_shell(
+      "rm -rf build && cmake -S . -B build && cmake --build build");
+
+  result.actions_taken.push_back("Ran clean build (rm -rf build && cmake configure && build)");
+  result.output_log = exec_result.stdout_output;
+
+  if (!exec_result.success) {
+    result.errors.push_back("Clean build failed with exit code " +
+                            std::to_string(exec_result.exit_code));
+  }
+
+  return exec_result.success;
 }
 
 bool RecoverySuggester::execute_custom_command(const RecoveryAction &action,
                                                 int64_t project_id,
                                                 RecoveryResult &result) {
-  // This would execute custom command
-  result.actions_taken.push_back("Would run command (not yet implemented)");
-  result.output_log = "Custom commands require system module integration";
-  return false;
+  if (!executor_) {
+    result.errors.push_back("No executor configured");
+    return false;
+  }
+
+  auto it = action.params.find("command");
+  if (it == action.params.end() || it->second.empty()) {
+    result.errors.push_back("No command specified in action params");
+    return false;
+  }
+
+  const std::string &command = it->second;
+
+  if (log_) {
+    log_->info("Brain", "Executing custom recovery command: " + command);
+  }
+
+  auto exec_result = executor_->execute_shell(command);
+
+  result.actions_taken.push_back("Ran command: " + command);
+  result.output_log = exec_result.stdout_output;
+
+  if (!exec_result.success) {
+    result.errors.push_back("Command failed with exit code " +
+                            std::to_string(exec_result.exit_code));
+  }
+
+  return exec_result.success;
 }
 
 // ===== Private: Confidence Scoring =====

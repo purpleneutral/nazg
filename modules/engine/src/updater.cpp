@@ -1,4 +1,5 @@
 #include "engine/updater.hpp"
+#include "engine/version.hpp"
 #include "blackbox/logger.hpp"
 #include "config/parser.hpp"
 #include "system/fs.hpp"
@@ -116,6 +117,9 @@ void log_error(const nazg::update::Config &cfg, const std::string &tag,
 
 namespace nazg::update {
 
+// Forward declarations for functions defined below
+static std::optional<std::string> active_version(const Config &cfg);
+
 Config default_config() {
   Config c{};
   // Use XDG-compliant directories
@@ -129,9 +133,64 @@ Config default_config() {
 
 CheckResult check(const Config &cfg) {
   CheckResult r{};
-  r.current_version = "unknown";
-  r.latest_version = "unknown";
-  r.latest_ref = cfg.ref.empty() ? "auto" : cfg.ref;
+
+  // Current version: prefer active symlink version, fall back to compiled-in
+  auto active = active_version(cfg);
+  r.current_version = active.value_or(NAZG_ANDUIN_VERSION);
+
+  // Discover source directory (same logic as update_from_source)
+  std::string src_dir;
+
+  if (!cfg.local_src_hint.empty()) {
+    src_dir = expand_tilde(cfg.local_src_hint);
+  }
+
+  if (src_dir.empty()) {
+    if (const char *ev = std::getenv("NAZG_SRC"); ev && *ev) {
+      src_dir = ev;
+    }
+  }
+
+  if (src_dir.empty()) {
+    const char *home = std::getenv("HOME");
+    if (home) {
+      fs::path p = fs::path(home) / "projects" / "cpp" / "nazg";
+      if (fs::exists(p / "CMakeLists.txt")) {
+        src_dir = p.string();
+      }
+    }
+  }
+
+  if (src_dir.empty()) {
+    auto exe = current_exe();
+    if (!exe.empty()) {
+      fs::path p = fs::path(exe).parent_path().parent_path();
+      if (fs::exists(p / "CMakeLists.txt")) {
+        src_dir = p.string();
+      }
+    }
+  }
+
+  // Query latest version from git
+  if (!src_dir.empty() && fs::exists(fs::path(src_dir) / ".git")) {
+    std::string tag = detect_version_tag(src_dir);
+    std::string shortsha = git_short(src_dir);
+
+    if (!tag.empty()) {
+      r.latest_version = tag;
+    } else if (!shortsha.empty()) {
+      r.latest_version = shortsha;
+    } else {
+      r.latest_version = "unknown";
+    }
+
+    r.latest_ref = cfg.ref.empty() ? "auto" : cfg.ref;
+    r.update_available = (r.latest_version != r.current_version);
+  } else {
+    r.latest_version = "unknown";
+    r.latest_ref = cfg.ref.empty() ? "auto" : cfg.ref;
+  }
+
   return r;
 }
 

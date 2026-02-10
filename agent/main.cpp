@@ -2,15 +2,29 @@
 #include "blackbox/logger.hpp"
 #include "blackbox/options.hpp"
 
+#include <atomic>
 #include <chrono>
+#include <csignal>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <thread>
 
+namespace {
+std::atomic<bool> g_shutdown{false};
+
+void signal_handler(int /*sig*/) {
+  g_shutdown.store(true);
+}
+} // namespace
+
 int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
+
+  // Install signal handlers for graceful shutdown
+  std::signal(SIGINT, signal_handler);
+  std::signal(SIGTERM, signal_handler);
 
   ::nazg::blackbox::options log_opts;
   log_opts.console_enabled = true;
@@ -32,10 +46,12 @@ int main(int argc, char **argv) {
 
   std::cout << "nazg-agent listening on " << opts.bind_address << ":" << opts.port << std::endl;
 
-  // Block until signal (Ctrl-C) - basic loop
-  while (runtime.is_running()) {
+  while (runtime.is_running() && !g_shutdown.load()) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
+
+  std::cout << "Shutting down nazg-agent..." << std::endl;
+  runtime.stop();
 
   return 0;
 }

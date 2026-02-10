@@ -16,7 +16,8 @@ std::vector<PatternMatcher::Pattern>
 PatternMatcher::find_matching_patterns(int64_t project_id,
                                         const std::string &error_signature,
                                         const std::string &failure_type,
-                                        double similarity_threshold) {
+                                        double similarity_threshold,
+                                        const std::string &error_message) {
   std::vector<Pattern> matches;
 
   if (!store_) {
@@ -38,10 +39,11 @@ PatternMatcher::find_matching_patterns(int64_t project_id,
       continue;
     }
 
-    // If pattern has regex, check if error matches
-    if (!pattern.error_regex.empty()) {
-      // For now, skip regex matching (can implement later)
-      // This would require pattern.error_regex to be a valid regex
+    // If pattern has regex and we have an error message, check regex match
+    if (!pattern.error_regex.empty() && !error_message.empty() &&
+        matches_error_pattern(error_message, pattern.error_regex)) {
+      matches.push_back(pattern);
+      continue;
     }
   }
 

@@ -66,7 +66,8 @@ int64_t Learner::record_failure(int64_t project_id,
 
       // Check if pattern already exists
       auto patterns = pattern_matcher_->find_matching_patterns(
-          project_id, error_signature, context.failure_type, 0.8);
+          project_id, error_signature, context.failure_type, 0.8,
+          context.error_message);
 
       if (patterns.empty()) {
         // Create new pattern

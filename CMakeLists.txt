@@ -70,6 +70,7 @@ add_nazg_module(scaffold blackbox directive prompt git nexus)  # Project scaffol
 add_nazg_module(agent blackbox nexus)
 target_link_libraries(agent PUBLIC SQLite::SQLite3)
 add_nazg_module(workspace blackbox nexus brain system directive)  # Workspace Time Machine
+target_link_libraries(brain PUBLIC workspace)  # Brain recovery uses workspace for restore
 add_nazg_module(bot system blackbox directive nexus config prompt agent)    # Bot orchestration
 add_nazg_module(docker_monitor blackbox nexus bot agent)                # Docker monitoring
 add_nazg_module(tui blackbox directive config system nexus docker_monitor)    # TUI multiplexer

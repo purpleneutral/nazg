@@ -58,9 +58,11 @@ For deeper dives, see the module docs in `docs/`:
 
 ### Prerequisites
 
-- C++20 toolchain (GCC 11+ / Clang 13+)
-- CMake 3.20 or newer
-- SQLite3 development headers (for `nexus`)
+- C++17 toolchain (GCC 9+ / Clang 10+)
+- CMake 3.16 or newer
+- SQLite3 development headers (`libsqlite3-dev`)
+- libcurl development headers (`libcurl4-openssl-dev`)
+- OpenSSL development headers (`libssl-dev`)
 - `git` (used by updater and detector)
 
 ### Build

@@ -23,6 +23,8 @@ these utilities to interact with the host safely without duplicating platform-sp
 |----------|-------------|
 | `int run_command(const std::string& cmd)` | Executes a shell command via `std::system` and returns the decoded POSIX exit status (or raw result on non-POSIX platforms). |
 | `std::string run_capture(const std::string& cmd)` | Runs a command with `popen`, returns stdout as a string with the trailing newline removed. |
+| `CommandResult run_command_capture(const std::string& cmd)` | Executes a command, returning both the exit code and combined stdout/stderr output in a `CommandResult` struct. |
+| `CommandResult run_command_with_timeout(const std::string& cmd, int64_t timeout_ms)` | Executes a command with a deadline. Uses `fork`/`pipe`/`poll`/`waitpid` on Unix. Sends `SIGTERM` then `SIGKILL` on timeout; returns exit code 124 (matching coreutils `timeout` convention). Falls back to `run_command_capture` on non-Unix. |
 | `std::string shell_quote(std::string_view value)` | Wraps a string in single quotes, escaping embedded quotes so that user input can be safely injected into shell commands. |
 
 Usage pattern:
@@ -137,7 +139,7 @@ These components are evolving—consult the source files for the latest API unti
 |------|------------|
 | `ensure_dir`, `is_writable` helpers in `system::fs` | Centralise directory management currently duplicated in the engine updater. |
 | Argument-vector process API | Avoid shells entirely by using `posix_spawn`/`execve` for untrusted input. |
-| Async process execution | Stream output for long-running commands and support cancellation. |
+| Async / streaming process output | Forward output in real time while still capturing the full result. |
 | Windows support | Extend quoting/command detection to work natively on Windows shells (PowerShell/CMD). |
 | Rich sysinfo API | Expose structured host metadata for Doctor Bot diagnostics and assistant summaries. |
 

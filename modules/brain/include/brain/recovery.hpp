@@ -14,6 +14,14 @@ namespace nazg::blackbox {
 class logger;
 }
 
+namespace nazg::workspace {
+class Manager;
+}
+
+namespace nazg::task {
+class Executor;
+}
+
 namespace nazg::brain {
 
 class PatternMatcher;
@@ -81,6 +89,10 @@ public:
   // Verify recovery success (re-run the original command)
   bool verify_recovery(int64_t project_id, const std::string &original_command);
 
+  // Inject dependencies for execution strategies
+  void set_workspace_manager(workspace::Manager *mgr) { workspace_mgr_ = mgr; }
+  void set_executor(task::Executor *exec) { executor_ = exec; }
+
   // Get recovery actions from database
   std::vector<RecoveryAction> get_actions_for_pattern(int64_t pattern_id);
   std::vector<RecoveryAction> get_actions_for_failure(int64_t failure_id);
@@ -93,6 +105,8 @@ private:
   nexus::Store *store_;
   PatternMatcher *matcher_;
   blackbox::logger *log_;
+  workspace::Manager *workspace_mgr_ = nullptr;
+  task::Executor *executor_ = nullptr;
 
   // Suggestion generation strategies
 

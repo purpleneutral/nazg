@@ -671,20 +671,86 @@ bool GiteaServer::configure() {
 }
 
 bool GiteaServer::sync_repos(const std::vector<std::string>& local_paths) {
-  // Phase 1: Just log for now, full implementation in Phase 2 with API
-  if (log_) {
-    log_->info("Git/gitea", "Sync repos called with " + std::to_string(local_paths.size()) + " repos");
-    log_->info("Git/gitea", "Full sync implementation requires API client (Phase 2)");
+  if (!api_) {
+    if (log_) {
+      log_->error("Git/gitea", "API client not initialized, cannot sync repos");
+    }
+    return false;
   }
 
-  // TODO: Phase 2 implementation
-  // For each local bare repo:
-  // 1. Extract repo name
-  // 2. Create repo on Gitea via API
-  // 3. Add Gitea as remote
-  // 4. Push to Gitea
+  if (log_) {
+    log_->info("Git/gitea", "Syncing " + std::to_string(local_paths.size()) + " repos to Gitea");
+  }
 
-  return true;
+  bool all_ok = true;
+
+  for (const auto &local_path : local_paths) {
+    fs::path repo_path(local_path);
+
+    // Extract repo name from path (strip .git suffix if present)
+    std::string repo_name = repo_path.filename().string();
+    if (repo_name.size() > 4 && repo_name.substr(repo_name.size() - 4) == ".git") {
+      repo_name = repo_name.substr(0, repo_name.size() - 4);
+    }
+    if (repo_name.empty()) {
+      repo_name = repo_path.parent_path().filename().string();
+    }
+
+    if (log_) {
+      log_->info("Git/gitea", "Syncing repo: " + repo_name + " from " + local_path);
+    }
+
+    // Check if repo already exists on Gitea
+    auto existing = api_->get_repo("admin", repo_name);
+    if (!existing) {
+      // Create the repo on Gitea
+      Repository repo;
+      repo.name = repo_name;
+      repo.is_private = true;
+
+      if (!api_->create_repo("admin", repo)) {
+        if (log_) {
+          log_->error("Git/gitea", "Failed to create repo: " + repo_name);
+        }
+        all_ok = false;
+        continue;
+      }
+
+      if (log_) {
+        log_->info("Git/gitea", "Created repo on Gitea: " + repo_name);
+      }
+    }
+
+    // Add gitea remote to local repo (ignore error if already exists)
+    std::string gitea_url = config_.web_url + "/admin/" + repo_name + ".git";
+    std::string add_remote_cmd = "git -C " + nazg::system::shell_quote(local_path) +
+                                 " remote add gitea " + nazg::system::shell_quote(gitea_url) +
+                                 " 2>/dev/null; true";
+    nazg::system::run_command(add_remote_cmd);
+
+    // Update remote URL in case it changed
+    std::string set_url_cmd = "git -C " + nazg::system::shell_quote(local_path) +
+                              " remote set-url gitea " + nazg::system::shell_quote(gitea_url);
+    nazg::system::run_command(set_url_cmd);
+
+    // Push all refs to Gitea
+    std::string push_cmd = "git -C " + nazg::system::shell_quote(local_path) +
+                           " push --mirror gitea 2>&1";
+    auto push_result = nazg::system::run_command_capture(push_cmd);
+
+    if (push_result.exit_code != 0) {
+      if (log_) {
+        log_->error("Git/gitea", "Failed to push " + repo_name + ": " + push_result.output);
+      }
+      all_ok = false;
+    } else {
+      if (log_) {
+        log_->info("Git/gitea", "Pushed " + repo_name + " to Gitea");
+      }
+    }
+  }
+
+  return all_ok;
 }
 
 bool GiteaServer::create_repo(const std::string& name,

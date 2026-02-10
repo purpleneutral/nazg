@@ -57,7 +57,8 @@ public:
   std::vector<Pattern> find_matching_patterns(int64_t project_id,
                                                const std::string &error_signature,
                                                const std::string &failure_type,
-                                               double similarity_threshold = 0.7);
+                                               double similarity_threshold = 0.7,
+                                               const std::string &error_message = "");
 
   // Create or update pattern from similar failures
   // If pattern exists, updates it; otherwise creates new one

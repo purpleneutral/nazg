@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <string_view>
 
@@ -17,6 +18,12 @@ int run_command(const std::string &cmd);
 
 // Execute command once, capturing combined stdout/stderr and the exit code.
 CommandResult run_command_capture(const std::string &cmd);
+
+// Execute command with a timeout (milliseconds).
+// If the child exceeds the deadline it is killed (SIGTERM then SIGKILL).
+// Returns exit_code 124 on timeout (matching coreutils timeout convention).
+CommandResult run_command_with_timeout(const std::string &cmd,
+                                       int64_t timeout_ms);
 
 // Safely quote a shell argument using single quotes.
 // Returns a string wrapped in single quotes with any existing

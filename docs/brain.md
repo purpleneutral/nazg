@@ -12,6 +12,9 @@ CLI commands can explain why they recommend a build, a test run, or a simple ski
 - `brain::Detector` - Detects language, build system, SCM from filesystem
 - `brain::Snapshotter` - Computes SHA-256 tree hashes, tracks changes
 - `brain::Planner` - Generates build/test plans based on project state
+- `brain::Learner` - Records failures, auto-learns patterns from similar errors
+- `brain::PatternMatcher` - Matches errors against learned patterns via signature and regex
+- `brain::RecoverySuggester` - Suggests and executes recovery actions (restore, clean build, custom commands)
 
 **Key Functions:**
 ```cpp
@@ -160,7 +163,27 @@ This data powers assistant explanations and future analytics.
 
 ---
 
-## 9. Extensibility Ideas
+## 9. Failure Learning & Recovery
+
+The brain module includes a closed-loop failure intelligence system:
+
+1. **Learner** (`brain::Learner`) records failures with full context (command, output, exit code, changed files,
+   environment) and auto-discovers patterns when 3+ similar failures accumulate.
+2. **PatternMatcher** (`brain::PatternMatcher`) matches new failures against learned patterns using both exact
+   signature comparison and regex matching against `error_regex` fields.
+3. **RecoverySuggester** (`brain::RecoverySuggester`) generates ranked recovery actions from pattern history,
+   similar resolved failures, and generic heuristics. Execution strategies include:
+   - **Restore files** – Partial workspace restore via `workspace::Manager`
+   - **Restore snapshot** – Full workspace restore to a known-good state
+   - **Clean build** – Remove build directory and rebuild from scratch
+   - **Custom command** – Execute an arbitrary recovery command via `task::Executor`
+   - **Verification** – Re-run the original command to confirm the fix worked
+
+Wire up recovery with `set_workspace_manager()` and `set_executor()` on the `RecoverySuggester` instance.
+
+---
+
+## 10. Extensibility Ideas
 
 - **Configurable ignore patterns** – Allow users to add glob patterns so large generated directories do not
   influence language detection or hashing time.
@@ -171,7 +194,7 @@ This data powers assistant explanations and future analytics.
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
