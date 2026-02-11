@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "docker_monitor/orchestrator.hpp"
 #include "docker_monitor/compose_parser.hpp"
 #include "blackbox/logger.hpp"
@@ -695,7 +713,7 @@ bool Orchestrator::complete_action(int64_t action_id, bool success,
 }
 
 // Stub implementations for now - would need AgentTransport integration
-bool Orchestrator::restart_stack(int64_t stack_id, bool wait_for_health) {
+bool Orchestrator::restart_stack(int64_t stack_id, bool /*wait_for_health*/) {
   // TODO: Implement actual restart logic with agent communication
   if (log_) {
     log_->info("orchestrator", "restart_stack called for stack ID: " +
@@ -704,8 +722,8 @@ bool Orchestrator::restart_stack(int64_t stack_id, bool wait_for_health) {
   return true;
 }
 
-bool Orchestrator::restart_service(int64_t server_id, const std::string &service_name,
-                                   bool restart_dependents) {
+bool Orchestrator::restart_service(int64_t /*server_id*/, const std::string &service_name,
+                                   bool /*restart_dependents*/) {
   // TODO: Implement
   if (log_) {
     log_->info("orchestrator", "restart_service called for: " + service_name);
@@ -713,63 +731,63 @@ bool Orchestrator::restart_service(int64_t server_id, const std::string &service
   return true;
 }
 
-bool Orchestrator::start_stack(int64_t stack_id) {
+bool Orchestrator::start_stack(int64_t /*stack_id*/) {
   // TODO: Implement
   return true;
 }
 
-bool Orchestrator::stop_stack(int64_t stack_id) {
+bool Orchestrator::stop_stack(int64_t /*stack_id*/) {
   // TODO: Implement
   return true;
 }
 
-bool Orchestrator::fix_issue(int64_t issue_id) {
+bool Orchestrator::fix_issue(int64_t /*issue_id*/) {
   // TODO: Implement
   return true;
 }
 
-int Orchestrator::auto_resolve_issues(int64_t server_id) {
+int Orchestrator::auto_resolve_issues(int64_t /*server_id*/) {
   // TODO: Implement
   return 0;
 }
 
-std::vector<OrchestrationRule> Orchestrator::get_rules(int64_t server_id, int64_t stack_id) {
+std::vector<OrchestrationRule> Orchestrator::get_rules(int64_t /*server_id*/, int64_t /*stack_id*/) {
   // TODO: Implement
   return {};
 }
 
 std::vector<std::string> Orchestrator::evaluate_rules(
-    int64_t server_id,
-    const std::map<std::string, std::string> &context) {
+    int64_t /*server_id*/,
+    const std::map<std::string, std::string> &/*context*/) {
   // TODO: Implement
   return {};
 }
 
-int64_t Orchestrator::add_rule(int64_t server_id, int64_t stack_id,
-                               const std::string &rule_type,
-                               const std::string &condition_json,
-                               const std::string &action_json,
-                               int priority,
-                               const std::string &description) {
+int64_t Orchestrator::add_rule(int64_t /*server_id*/, int64_t /*stack_id*/,
+                               const std::string &/*rule_type*/,
+                               const std::string &/*condition_json*/,
+                               const std::string &/*action_json*/,
+                               int /*priority*/,
+                               const std::string &/*description*/) {
   // TODO: Implement
   return 0;
 }
 
-bool Orchestrator::is_service_healthy(int64_t server_id, const std::string &service_name) {
+bool Orchestrator::is_service_healthy(int64_t /*server_id*/, const std::string &/*service_name*/) {
   // TODO: Query container health from database
   return true;
 }
 
-bool Orchestrator::wait_for_health(int64_t server_id, const std::string &service_name,
-                                   int timeout_sec) {
+bool Orchestrator::wait_for_health(int64_t /*server_id*/, const std::string &/*service_name*/,
+                                   int /*timeout_sec*/) {
   // TODO: Implement health check waiting
   return true;
 }
 
-bool Orchestrator::execute_compose_command(int64_t server_id,
-                                           const std::vector<std::string> &compose_files,
-                                           const std::string &command,
-                                           const std::string &service) {
+bool Orchestrator::execute_compose_command(int64_t /*server_id*/,
+                                           const std::vector<std::string> &/*compose_files*/,
+                                           const std::string &/*command*/,
+                                           const std::string &/*service*/) {
   // TODO: Build and execute docker compose command via agent
   return true;
 }

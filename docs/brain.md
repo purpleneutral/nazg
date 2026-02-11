@@ -31,11 +31,11 @@ auto plan = planner.decide(project_id, info, snapshot);
 ```
 
 **CLI Commands:**
-- `nazg brain detect` - Show detected project info
-- `nazg brain snapshot` - Display current snapshot
-- `nazg brain plan` - Show recommended action
-- `nazg brain facts [PROJECT_ID]` - List stored facts
-- `nazg brain runs [PROJECT_ID]` - Show build history
+- `nazg build` - Show detected project info
+- `nazg build_status` - Display current snapshot
+- `nazg why` - Show recommended action
+- `nazg build_facts [PROJECT_ID]` - List stored facts
+- `nazg brain_failures [PROJECT_ID]` - Show build history
 
 ---
 
@@ -48,7 +48,7 @@ auto plan = planner.decide(project_id, info, snapshot);
 - **Planning** – Decide whether to build, skip, or warn based on the latest snapshot and detected build system.
 - **Transparency** – Persist facts, snapshots, and planner decisions in Nexus so every recommendation is
   explainable after the fact.
-- **CLI support** – Provide `nazg brain …` commands that surface the raw data for debugging and introspection.
+- **CLI support** – Provide `nazg build`, `nazg why`, `nazg build_facts`, and related commands that surface the raw data for debugging and introspection.
 
 ---
 
@@ -140,10 +140,11 @@ builder events. This closes the loop between “why” (Brain) and “what happe
 ## 7. Command Surface
 
 Brain registers several directive commands in `modules/brain/src/commands.cpp`. Examples include:
-- `nazg brain detect` – Run detector and print the full `ProjectInfo` structure.
-- `nazg brain snapshot` – Compute a snapshot and show summary counts.
-- `nazg brain plan` – Produce the current plan for the workspace.
-- `nazg brain facts|runs|events` – Inspect persisted data for debugging.
+- `nazg build` – Run detector and print the full `ProjectInfo` structure.
+- `nazg build_status` – Compute a snapshot and show summary counts.
+- `nazg why` – Produce the current plan for the workspace.
+- `nazg build_facts` / `nazg brain_failures` / `nazg brain_failure` – Inspect persisted data for debugging.
+- `nazg brain_patterns` / `nazg brain_pattern` / `nazg brain_suggest` / `nazg brain_recover` – Failure learning and recovery commands.
 
 Commands reuse the shared directive context, so they have access to the logger, Nexus store, and verbose flag.
 

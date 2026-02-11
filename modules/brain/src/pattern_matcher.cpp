@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "brain/pattern_matcher.hpp"
 #include "blackbox/logger.hpp"
 #include "nexus/store.hpp"
@@ -16,7 +34,7 @@ std::vector<PatternMatcher::Pattern>
 PatternMatcher::find_matching_patterns(int64_t project_id,
                                         const std::string &error_signature,
                                         const std::string &failure_type,
-                                        double similarity_threshold,
+                                        double /*similarity_threshold*/,
                                         const std::string &error_message) {
   std::vector<Pattern> matches;
 

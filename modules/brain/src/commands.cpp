@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "brain/commands.hpp"
 #include "directive/context.hpp"
 #include "directive/registry.hpp"
@@ -35,7 +53,7 @@ static std::string get_cwd() {
 }
 
 // nazg build - smart build with intelligence
-static int cmd_build(const directive::command_context &ctx,
+static int cmd_build(const directive::command_context &/*ctx*/,
                      const directive::context &ectx) {
 
   if (!ectx.store) {
@@ -92,7 +110,7 @@ static int cmd_build(const directive::command_context &ctx,
 }
 
 // nazg build status - show project status
-static int cmd_build_status(const directive::command_context &ctx,
+static int cmd_build_status(const directive::command_context &/*ctx*/,
                             const directive::context &ectx) {
 
   if (!ectx.store) {
@@ -132,7 +150,7 @@ static int cmd_build_status(const directive::command_context &ctx,
 }
 
 // nazg build facts - list all facts
-static int cmd_build_facts(const directive::command_context &ctx,
+static int cmd_build_facts(const directive::command_context &/*ctx*/,
                            const directive::context &ectx) {
 
   if (!ectx.store) {
@@ -163,7 +181,7 @@ static int cmd_build_facts(const directive::command_context &ctx,
 }
 
 // nazg why - explain what would happen without executing
-static int cmd_why(const directive::command_context &ctx,
+static int cmd_why(const directive::command_context &/*ctx*/,
                    const directive::context &ectx) {
 
   if (!ectx.store) {
@@ -461,7 +479,7 @@ static int cmd_brain_failure(const directive::command_context &ctx,
 }
 
 // nazg brain patterns - list learned patterns
-static int cmd_brain_patterns(const directive::command_context &ctx,
+static int cmd_brain_patterns(const directive::command_context &/*ctx*/,
                                const directive::context &ectx) {
   if (!ectx.store) {
     std::cerr << "Error: Database not initialized\n";
@@ -657,8 +675,6 @@ static int cmd_brain_suggest(const directive::command_context &ctx,
     return 1;
   }
 
-  const auto &failure = *failure_opt;
-
   // Create recovery suggester
   brain::RecoverySuggester suggester(ectx.store, matcher, ectx.log);
 
@@ -853,7 +869,7 @@ static int cmd_brain_recover(const directive::command_context &ctx,
   return result.success ? 0 : 1;
 }
 
-void register_commands(directive::registry &reg, const directive::context &ctx) {
+void register_commands(directive::registry &reg, const directive::context &/*ctx*/) {
   directive::command_spec spec_build;
   spec_build.name = "build";
   spec_build.summary = "Smart build with change detection";

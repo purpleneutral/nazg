@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "test/commands.hpp"
 #include "test/runner.hpp"
 #include "test/types.hpp"
@@ -113,13 +131,20 @@ std::string filter_git_output(const std::string& output) {
   return result;
 }
 
+std::string repeat_str(const std::string &s, int n) {
+  std::string result;
+  result.reserve(s.size() * n);
+  for (int i = 0; i < n; ++i) result += s;
+  return result;
+}
+
 // Create a centered box with dynamic width
 std::string make_box_top(int width) {
-  return "┌" + std::string(width - 2, '─') + "┐";
+  return "\u250c" + repeat_str("\u2500", width - 2) + "\u2510";
 }
 
 std::string make_box_bottom(int width) {
-  return "└" + std::string(width - 2, '─') + "┘";
+  return "\u2514" + repeat_str("\u2500", width - 2) + "\u2518";
 }
 
 std::string make_box_line(const std::string& text, int width) {
@@ -171,7 +196,7 @@ StepResult run_shell_step(const std::string &name, const std::string &cmd,
   // Step header
   std::cout << "\n" << fmt.bold(fmt.cyan("┌─ " + name)) << "\n";
   std::cout << fmt.dim("│ $ " + cmd) << "\n";
-  std::cout << fmt.cyan("└" + std::string(term_width - 2, '─')) << "\n";
+  std::cout << fmt.cyan("\u2514" + repeat_str("\u2500", term_width - 2)) << "\n";
 
   nazg::system::CommandResult proc = nazg::system::run_command_capture(result.command);
 
@@ -764,7 +789,7 @@ scenario_cleanup:
     std::cout << fmt.dim("│  2. ") << fmt.cyan("nazg git add CONFLICT.md") << "\n";
     std::cout << fmt.dim("│  3. ") << fmt.cyan("git rebase --continue") << "\n";
     std::cout << fmt.dim("│  4. ") << fmt.cyan("nazg git push") << "\n";
-    std::cout << fmt.dim("└" + std::string(term_width - 2, '─')) << "\n";
+    std::cout << fmt.dim("\u2514" + repeat_str("\u2500", term_width - 2)) << "\n";
   } else {
     std::cout << "\n" << fmt.red("✗ Scenario aborted due to failure") << "\n\n";
   }
@@ -812,7 +837,7 @@ scenario_cleanup:
 
 // ── Prompt Test Suite ──
 
-int run_prompt_capability_test(const nazg::directive::context &ectx) {
+int run_prompt_capability_test(const nazg::directive::context &/*ectx*/) {
   std::cout << "\n";
   std::cout << "╭─────────────────────────────────────────────────────────────╮\n";
   std::cout << "│ Terminal Capability Detection                               │\n";
@@ -866,7 +891,7 @@ int run_prompt_capability_test(const nazg::directive::context &ectx) {
   return 0;
 }
 
-int run_prompt_color_test(const nazg::directive::context &ectx) {
+int run_prompt_color_test(const nazg::directive::context &/*ectx*/) {
   nazg::prompt::ColorFormatter fmt(nazg::system::get_capabilities());
 
   std::cout << "\n";

@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "git/bare.hpp"
 #include "blackbox/logger.hpp"
 #include "nexus/store.hpp"
@@ -14,11 +32,12 @@ namespace nazg::git {
 namespace {
 int exec_cmd(const std::string &cmd) { return std::system(cmd.c_str()); }
 
+struct PipeCloser { int operator()(FILE* f) const { return pclose(f); } };
+
 std::string exec_output(const std::string &cmd) {
   std::array<char, 128> buffer;
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-                                                  pclose);
+  std::unique_ptr<FILE, PipeCloser> pipe(popen(cmd.c_str(), "r"), PipeCloser{});
   if (!pipe)
     return "";
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
@@ -35,11 +54,6 @@ std::string get_home() {
     return home;
   }
   return "/tmp";
-}
-
-std::string get_project_name(const std::string &path) {
-  fs::path p(path);
-  return p.filename().string();
 }
 } // namespace
 

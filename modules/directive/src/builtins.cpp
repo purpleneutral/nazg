@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "directive/builtins.hpp"
 #include "directive/registry.hpp"
 #include "blackbox/logger.hpp"
@@ -152,23 +170,6 @@ static int cmd_info(const command_context &ctx, const context &ectx) {
     return 2;
   }
 
-  // if (ctx.argc < 2) {
-  //   std::cerr << "edict: info: ctx missing registry ptr\n";
-  //   return 2;
-  // }
-  // const registry *reg = nullptr;
-  // {
-  //   std::uintptr_t v = 0;
-  //   std::stringstream ss;
-  //   ss << std::hex << ctx.argv[1];
-  //   ss >> v;
-  //   reg = reinterpret_cast<const registry *>(v);
-  // }
-  // if (!reg) {
-  //   std::cerr << "edict: info: invalid registry ptr\n";
-  //   return 2;
-  // }
-  //
   if (want_json)
     print_json(*reg, only, skip);
   if (want_table)

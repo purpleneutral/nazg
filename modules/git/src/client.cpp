@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "git/client.hpp"
 #include "blackbox/logger.hpp"
 #include "system/process.hpp"
@@ -17,12 +35,14 @@ int exec_cmd(const std::string &cmd) {
   return std::system(cmd.c_str());
 }
 
+struct PipeCloser { int operator()(FILE* f) const { return pclose(f); } };
+
 // Execute command and capture output
 std::string exec_output(const std::string &cmd) {
   std::array<char, 128> buffer;
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-                                                  pclose);
+  std::unique_ptr<FILE, PipeCloser> pipe(popen(cmd.c_str(), "r"),
+                                                  PipeCloser{});
   if (!pipe) {
     return "";
   }
@@ -34,14 +54,6 @@ std::string exec_output(const std::string &cmd) {
     result.pop_back();
   }
   return result;
-}
-
-std::string trim(const std::string &s) {
-  auto start = s.find_first_not_of(" \t\n\r");
-  if (start == std::string::npos)
-    return "";
-  auto end = s.find_last_not_of(" \t\n\r");
-  return s.substr(start, end - start + 1);
 }
 
 std::string cd_repo_prefix(const std::string &repo_path) {

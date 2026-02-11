@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "engine/runtime.hpp"
 #include "engine/updater.hpp"
 #include "engine/cmd_info.hpp"
@@ -23,22 +41,12 @@
 
 #include "directive/builtins.hpp"
 #include "directive/context.hpp"
-#include "directive/docker_commands.hpp"
 #include "directive/db_commands.hpp"
 #include "directive/agent_commands.hpp"
 #include "directive/registry.hpp"
 
 #include "nexus/config.hpp"
 #include "nexus/store.hpp"
-// #include "core/log.hpp" // Gremlin logger, internal
-
-// #include "nazg/entmoot/CapabilityRegistry.hpp"
-// #include "nazg/entmoot/EventBus.hpp"
-// #include "nazg/entmoot/PluginContext.hpp"
-// #include "nazg/entmoot/PluginLoader.hpp"
-
-// #include "nazg/palantir/palantir.hpp"
-
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -58,9 +66,6 @@ struct runtime::impl {
   std::unique_ptr<blackbox::logger> log;
   std::unique_ptr<nexus::Store> db;
 
-  // entmoot::CapabilityRegistry registry;
-  // entmoot::EventBus bus;
-  // entmoot::PluginLoader loader;
   std::unique_ptr<directive::registry> reg;
   std::unique_ptr<directive::context> dctx;
 
@@ -474,8 +479,7 @@ void runtime::init_commands() {
   scaffold::register_commands(*p_->reg, *p_->dctx);
   git::register_commands(*p_->reg, *p_->dctx);
   bot::register_commands(*p_->reg, *p_->dctx);
-  docker_monitor::register_commands(*p_->reg, *p_->dctx);  // Single source of truth for docker commands
-  // directive::register_docker_commands(*p_->reg, *p_->dctx);  // REMOVED - docker_monitor owns all docker commands
+  docker_monitor::register_commands(*p_->reg, *p_->dctx);
   directive::register_db_commands(*p_->reg, *p_->dctx);
   directive::register_agent_commands(*p_->reg, *p_->dctx);
   workspace::register_commands(*p_->reg, *p_->dctx);
@@ -492,7 +496,8 @@ directive::registry &runtime::registry() { return *p_->reg; }
 
 // ── Intelligent Assistant Mode ──
 namespace {
-int run_assistant_mode(const directive::context &ectx) {
+int run_assistant_mode(const directive::context &ectx,
+                       const directive::registry &reg) {
   auto *log = ectx.log;
 
   if (log) {
@@ -662,19 +667,19 @@ int run_assistant_mode(const directive::context &ectx) {
     log->info("Assistant", "User selected: " + selected_command);
   }
 
-  // Provide guidance on running the command
-  std::cout << "\n💡 To run this command, use:\n";
-  std::cout << "   nazg " << selected_command;
+  // Dispatch the selected command through the registry
+  std::string prog_str = ectx.prog;
+  std::vector<const char *> synth_argv;
+  synth_argv.push_back(prog_str.c_str());
+  synth_argv.push_back(selected_command.c_str());
 
-  if (selected_command == "init") {
-    std::cout << " <language> [project-name]";
-  } else if (selected_command == "git-commit") {
-    std::cout << " \"<message>\"";
+  std::cout << "\n";
+  auto [found, code] = reg.dispatch(selected_command, ectx, synth_argv);
+  if (!found) {
+    std::cerr << "Command not found: " << selected_command << "\n";
+    return 2;
   }
-
-  std::cout << "\n\nFor more help, run: nazg " << selected_command << " --help\n";
-
-  return 0;
+  return code;
 }
 } // namespace
 
@@ -720,14 +725,18 @@ int runtime::dispatch(int argc, char **argv) {
     return 0;
   }
 
-  // No command given - launch TUI
+  // No command given - launch intelligent assistant
   if (cmd.empty()) {
-    if (p_->dctx->log) {
-      p_->dctx->log->info("Engine", "No command given, launching TUI");
+    // Non-interactive terminals get help instead of blocking on stdin
+    if (!::isatty(STDIN_FILENO)) {
+      if (p_->dctx->log)
+        p_->dctx->log->info("Engine", "Non-interactive terminal, showing help");
+      p_->reg->print_help(argv[0]);
+      return 0;
     }
-    // Run TUI directly
-    tui::TUIApp app(p_->dctx->log, p_->dctx->cfg);
-    return app.run();
+    if (p_->dctx->log)
+      p_->dctx->log->info("Engine", "No command given, launching assistant mode");
+    return run_assistant_mode(*p_->dctx, *p_->reg);
   }
 
   auto [found, code] = p_->reg->dispatch(cmd, *p_->dctx, av);
@@ -745,38 +754,5 @@ int runtime::dispatch(int argc, char **argv) {
   }
   return code;
 }
-
-// ----- Plugins (Entmoot) ----------------------------------------------------
-
-// void runtime::bootstrap_plugins(char **argv) {
-//   using namespace nazg::entmoot;
-//
-//   // Build search paths (exe-relative first so local plugins resolve)
-//   fs::path exe_dir = fs::path(argv[0]).parent_path();
-//   p_->loader.add_search_path((exe_dir / "plugins").string());
-//   p_->loader.add_search_path("./plugins");
-//   if (!p_->opts.extra_plugin_path.empty())
-//     p_->loader.add_search_path(p_->opts.extra_plugin_path);
-//
-//   // User/system locations
-//   if (const char *home = std::getenv("HOME")) {
-//     p_->loader.add_search_path(std::string(home) +
-//                                "/.local/share/nazg/plugins");
-//   }
-//   p_->loader.add_search_path("/usr/lib/nazg/plugins");
-//
-//   // Wire context and load
-//   PluginContext ctx{};
-//   ctx.logger = p_->log.get(); // Blackbox logger
-//   ctx.registry = &p_->registry;
-//   ctx.bus = &p_->bus;
-//
-//   p_->loader.scan_and_load(ctx);
-// }
-
-// int runtime::run(int argc, char **argv) {
-//   // Initialize Entmoot, scan plugins, then dispatch to CLI / brain
-//   return 0;
-// }
 
 } // namespace nazg::engine

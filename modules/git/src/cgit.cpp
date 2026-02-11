@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "git/cgit.hpp"
 #include "blackbox/logger.hpp"
 #include "nexus/store.hpp"
@@ -15,11 +33,13 @@ namespace nazg::git {
 
 namespace {
 
+struct PipeCloser { int operator()(FILE* f) const { return pclose(f); } };
+
 // Execute command and capture output
 std::string exec_output(const std::string& cmd) {
   std::array<char, 256> buffer;
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+  std::unique_ptr<FILE, PipeCloser> pipe(popen(cmd.c_str(), "r"), PipeCloser{});
   if (!pipe) {
     return "";
   }
@@ -53,9 +73,9 @@ CgitServer::CgitServer(const ServerConfig& cfg,
 }
 
 bool CgitServer::ssh_test_connection() {
-  std::string cmd = "ssh -o ConnectTimeout=5 -o BatchMode=yes -p " +
+  std::string cmd = "ssh -o ConnectTimeout=5 -o BatchMode=yes -o StrictHostKeyChecking=accept-new -p " +
                     std::to_string(config_.ssh_port) + " " +
-                    config_.ssh_user + "@" + config_.host +
+                    nazg::system::shell_quote(config_.ssh_user + "@" + config_.host) +
                     " 'echo connected' 2>&1";
 
   if (log_) {
@@ -76,9 +96,10 @@ bool CgitServer::ssh_test_connection() {
 }
 
 bool CgitServer::ssh_exec(const std::string& cmd, std::string* output) {
-  std::string full_cmd = "ssh -p " + std::to_string(config_.ssh_port) + " " +
-                         config_.ssh_user + "@" + config_.host +
-                         " '" + cmd + "' 2>&1";
+  std::string full_cmd = "ssh -o StrictHostKeyChecking=accept-new -p " +
+                         std::to_string(config_.ssh_port) + " " +
+                         nazg::system::shell_quote(config_.ssh_user + "@" + config_.host) +
+                         " " + nazg::system::shell_quote(cmd) + " 2>&1";
 
   if (log_) {
     log_->debug("Git/cgit", "SSH exec: " + cmd);
@@ -94,9 +115,11 @@ bool CgitServer::ssh_exec(const std::string& cmd, std::string* output) {
 }
 
 bool CgitServer::upload_file(const std::string& local, const std::string& remote) {
-  std::string cmd = "scp -P " + std::to_string(config_.ssh_port) + " " +
-                    local + " " + config_.ssh_user + "@" + config_.host +
-                    ":" + remote + " 2>&1";
+  std::string cmd = "scp -o StrictHostKeyChecking=accept-new -P " +
+                    std::to_string(config_.ssh_port) + " " +
+                    nazg::system::shell_quote(local) + " " +
+                    nazg::system::shell_quote(config_.ssh_user + "@" + config_.host + ":" + remote) +
+                    " 2>&1";
 
   if (log_) {
     log_->debug("Git/cgit", "Uploading: " + local + " -> " + remote);
@@ -349,8 +372,9 @@ bool CgitServer::create_repo_directory() {
     log_->info("Git/cgit", "Creating repository directory...");
   }
 
-  std::string cmd = "sudo mkdir -p " + config_.repo_base_path + " && " +
-                    "sudo chown -R " + config_.ssh_user + ": " + config_.repo_base_path;
+  std::string cmd = "sudo mkdir -p " + nazg::system::shell_quote(config_.repo_base_path) + " && " +
+                    "sudo chown -R " + nazg::system::shell_quote(config_.ssh_user) + ": " +
+                    nazg::system::shell_quote(config_.repo_base_path);
 
   return ssh_exec(cmd);
 }
@@ -587,11 +611,12 @@ bool CgitServer::sync_repos(const std::vector<std::string>& local_paths) {
     }
 
     // Use rsync to sync bare repo
-    std::string cmd = "rsync -avz --delete -e 'ssh -p " +
-                      std::to_string(config_.ssh_port) + "' " +
-                      local_path + "/ " +
-                      config_.ssh_user + "@" + config_.host + ":" +
-                      remote_path + "/ 2>&1";
+    std::string cmd = "rsync -avz --delete -e " +
+                      nazg::system::shell_quote("ssh -o StrictHostKeyChecking=accept-new -p " +
+                                                std::to_string(config_.ssh_port)) + " " +
+                      nazg::system::shell_quote(local_path + "/") + " " +
+                      nazg::system::shell_quote(config_.ssh_user + "@" + config_.host + ":" +
+                                                remote_path + "/") + " 2>&1";
 
     int ret = std::system(cmd.c_str());
     if (ret != 0) {

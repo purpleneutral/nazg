@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "test/adapters.hpp"
 #include "blackbox/logger.hpp"
 
@@ -8,7 +26,7 @@ namespace nazg::test {
 
 GTestAdapter::GTestAdapter(nazg::blackbox::logger *log) : log_(log) {}
 
-std::vector<std::string> GTestAdapter::build_command(const std::string &working_dir,
+std::vector<std::string> GTestAdapter::build_command(const std::string &/*working_dir*/,
                                                       const RunOptions &opts) {
   std::vector<std::string> cmd = {"ctest"};
 
@@ -40,7 +58,7 @@ std::vector<std::string> GTestAdapter::build_command(const std::string &working_
 }
 
 TestRun GTestAdapter::parse_output(const std::string &stdout_output,
-                                    const std::string &stderr_output, int exit_code,
+                                    const std::string &/*stderr_output*/, int exit_code,
                                     int64_t duration_ms) {
   TestRun run;
   run.framework = Framework::GTEST;

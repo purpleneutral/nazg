@@ -77,7 +77,7 @@ rotate_bytes    = 5000000
 rotate_files    = 5
 
 [nexus]
-db_path = "${XDG_DATA_HOME:-$HOME/.local/share}/nazg/nexus.db"
+db_path = "${XDG_STATE_HOME:-$HOME/.local/state}/nazg/nazg.db"
 
 [engine]
 verbose = false
@@ -93,6 +93,8 @@ store. Missing sections simply lead to defaults:
 - Logging falls back to the hard-coded `blackbox::options` values.
 - Nexus defaults to `default_data_dir() + "/nexus.db"`.
 - Engine options remain whatever the CLI supplied.
+
+> For a complete annotated example with every known key, see `examples/config.toml` in the source tree.
 
 ---
 

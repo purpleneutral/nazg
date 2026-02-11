@@ -1,0 +1,163 @@
+# =============================================================================
+# Nazg configuration reference
+# =============================================================================
+#
+# Copy this file to ~/.config/nazg/config.toml (or $XDG_CONFIG_HOME/nazg/config.toml)
+# and uncomment the settings you want to change.  Every key shown below uses its
+# compiled default value so Nazg works out of the box without any config file.
+#
+# Values support environment-variable expansion:
+#   $HOME, ${XDG_DATA_HOME}, ${VAR:-fallback}
+#
+# Boolean values accept: true/false, 1/0, yes/no, on/off
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# [blackbox] -- Logging subsystem
+# -----------------------------------------------------------------------------
+[blackbox]
+# Minimum log level: trace, debug, info, warning, error, fatal
+# min_level       = "info"
+
+# Write log lines to the console (stdout).  Disabled by default; the --verbose
+# CLI flag or NAZG_LOG_CONSOLE=1 also enables this at runtime.
+# console_enabled = false
+
+# Use ANSI colour codes on the console.
+# console_colors  = true
+
+# Embed ANSI colour codes inside the log file (usually not desired).
+# color_in_file   = false
+
+# Path to the log file.  Environment variables are expanded.
+# file_path       = "${XDG_DATA_HOME:-$HOME/.local/share}/nazg/logs/nazg.log"
+
+# Rotate when the log file exceeds this many bytes (0 = no rotation).
+# rotate_bytes    = 5242880
+
+# Number of rotated log files to keep.
+# rotate_files    = 3
+
+# Source-location style in log lines: "none", "basename", or "full".
+# source_style    = "basename"
+
+# Include milliseconds in log timestamps.
+# include_ms      = true
+
+# Pad the level field to a fixed width for aligned output.
+# pad_level       = true
+
+# Fixed width for the tag/module column (0 = no padding).
+# tag_width       = 12
+
+# Include thread ID in log lines.
+# include_tid     = true
+
+# Include process ID in log lines.
+# include_pid     = false
+
+# -----------------------------------------------------------------------------
+# [nexus] -- SQLite persistence layer
+# -----------------------------------------------------------------------------
+[nexus]
+# Path to the Nexus database.  Defaults to $XDG_STATE_HOME/nazg/nazg.db when
+# the environment variable is set, otherwise ~/.local/state/nazg/nazg.db.
+# db_path                 = "${XDG_STATE_HOME:-$HOME/.local/state}/nazg/nazg.db"
+
+# Enable WAL (Write-Ahead Logging) mode for better concurrent read performance.
+# wal_mode                = true
+
+# Log a warning when a query takes longer than this many milliseconds.
+# slow_query_threshold_ms = 1000
+
+# Maximum number of events stored per project before older entries are pruned.
+# max_events_per_project  = 500
+
+# Maximum number of command-history entries kept globally.
+# max_command_history     = 1000
+
+# Automatically prune old events and history on startup.
+# auto_prune              = false
+
+# -----------------------------------------------------------------------------
+# [tui] -- Terminal user interface
+# -----------------------------------------------------------------------------
+[tui]
+# Colour theme: "cyberpunk" (default), or other registered theme names.
+# theme          = "cyberpunk"
+
+# The shell to launch inside TUI terminal panes.  Defaults to $SHELL or /bin/sh.
+# default_shell  = "/bin/bash"
+
+# The menu shown on TUI startup.
+# startup_menu   = "WelcomeScreen"
+
+# -----------------------------------------------------------------------------
+# [bots] -- Remote bot / agent infrastructure
+# -----------------------------------------------------------------------------
+[bots]
+# Default SSH private key used when connecting to remote hosts.
+# ssh_key        = ""
+
+# Default agent port for the nazg-agent daemon on remote hosts.
+# agent_port     = 7070
+
+# Per-host overrides live in sub-sections named [bots.hosts.<label>]:
+#
+# [bots.hosts.myserver]
+# address        = "10.0.0.5"
+# ssh_key        = "~/.ssh/myserver_ed25519"
+# services       = "docker,nginx"
+# agent_port     = 7070
+
+# -----------------------------------------------------------------------------
+# [containers] -- Container image and runtime settings for nazg-agent
+# -----------------------------------------------------------------------------
+[containers]
+# Base image used when building the agent container.
+# nazg_agent_base_image  = "ubuntu:22.04"
+
+# Pre-built container image name (pulled instead of building from a tarball).
+# nazg_agent_image       = ""
+
+# Local path to a tarball containing the agent binary for container import.
+# nazg_agent_tar         = ""
+
+# Remote path where the agent tarball is uploaded before container import.
+# nazg_agent_remote_tar  = ""
+
+# Container runtime to use (e.g. "docker", "podman").
+# nazg_agent_runtime     = ""
+
+# -----------------------------------------------------------------------------
+# [controlCenter] -- Centralised control-center server
+# -----------------------------------------------------------------------------
+[controlCenter]
+# TCP port the control-center listens on.
+# port           = 7070
+
+# Public hostname or IP that agents use to reach the control-center.
+# public_host    = ""
+
+# Local address to bind to (0.0.0.0 listens on all interfaces).
+# bind_address   = "0.0.0.0"
+
+# Shared secret used to authenticate agent connections.
+# auth_token     = ""
+
+# -----------------------------------------------------------------------------
+# [git-server.<name>] -- Git server registry (one section per server)
+# -----------------------------------------------------------------------------
+# Servers are looked up by their section name.  The "type" key selects the
+# driver: "cgit", "gitea", or "" (plain SSH/git).
+#
+# [git-server.myforge]
+# type           = "gitea"
+# host           = "git.example.com"
+# ssh_user       = "git"
+# ssh_port       = 22
+# port           = 3000
+# repo_base_path = "/srv/git"
+# config_path    = ""
+# web_url        = "https://git.example.com"
+# admin_token    = ""

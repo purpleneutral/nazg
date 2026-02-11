@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "docker_monitor/commands.hpp"
 #include "docker_monitor/client.hpp"
 #include "docker_monitor/orchestrator.hpp"
@@ -965,7 +983,7 @@ HelloWorldResult run_hello_world_container(int64_t server_id,
   return run_local_hello_world(label, host, pull_first, log);
 }
 
-void register_commands(directive::registry& reg, const directive::context& ctx) {
+void register_commands(directive::registry& reg, const directive::context& /*ctx*/) {
   // Single top-level docker command that handles all subcommands
   reg.add("docker", "Docker orchestration and intelligent container management", cmd_docker);
 }

@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "agent/runtime.hpp"
 #include "agent/protocol.hpp"
 #include "agent/docker_scanner.hpp"
@@ -188,14 +206,33 @@ void Runtime::handle_client(int client_fd) {
     return;
   }
 
-  if (log_) {
-    log_->info("agent", "Received hello from controller: " + payload);
-  }
-
   auto send_packet = [&](MessageType type, const std::string &body) {
     auto packet = encode(Header{type, 0}, body);
     ::send(client_fd, packet.data(), packet.size(), 0);
   };
+
+  // Verify auth token if configured
+  if (!opts_.auth_token.empty()) {
+    // Expected hello payload format: "nazg-controller:<token>"
+    std::string expected_prefix = "nazg-controller:";
+    if (payload.size() <= expected_prefix.size() ||
+        payload.substr(0, expected_prefix.size()) != expected_prefix ||
+        payload.substr(expected_prefix.size()) != opts_.auth_token) {
+      if (log_) {
+        log_->warn("agent", "Authentication failed from client");
+      }
+      send_packet(MessageType::Error, "authentication failed");
+      return;
+    }
+    if (log_) {
+      log_->info("agent", "Authenticated controller connected");
+    }
+  } else {
+    if (log_) {
+      log_->warn("agent", "No auth_token configured -- accepting unauthenticated connection");
+      log_->info("agent", "Received hello from controller: " + payload);
+    }
+  }
 
   send_packet(MessageType::HelloAck, "nazg-agent/0.1");
 
@@ -269,6 +306,15 @@ bool Runtime::read_message(int fd, protocol::Header &header, std::string &payloa
   payload.clear();
   if (header.payload_size == 0) {
     return true;
+  }
+
+  if (header.payload_size > MAX_PAYLOAD_SIZE) {
+    if (log_) {
+      log_->error("agent", "Rejected oversized payload: " +
+                  std::to_string(header.payload_size) + " bytes (max " +
+                  std::to_string(MAX_PAYLOAD_SIZE) + ")");
+    }
+    return false;
   }
 
   payload.resize(header.payload_size);

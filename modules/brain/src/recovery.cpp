@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "brain/recovery.hpp"
 #include "brain/pattern_matcher.hpp"
 #include "blackbox/logger.hpp"
@@ -184,7 +202,7 @@ RecoverySuggester::auto_recover(int64_t project_id, int64_t failure_id,
   return result;
 }
 
-bool RecoverySuggester::verify_recovery(int64_t project_id,
+bool RecoverySuggester::verify_recovery(int64_t /*project_id*/,
                                          const std::string &original_command) {
   if (!executor_ || original_command.empty()) {
     return true; // No executor or command to verify against
@@ -243,8 +261,8 @@ bool RecoverySuggester::update_action_stats(int64_t action_id, bool success,
 
 std::vector<RecoverySuggester::RecoveryAction>
 RecoverySuggester::generate_from_pattern(
-    int64_t project_id, int64_t pattern_id,
-    const std::map<std::string, std::string> &failure) {
+    int64_t /*project_id*/, int64_t pattern_id,
+    const std::map<std::string, std::string> &/*failure*/) {
 
   std::vector<RecoveryAction> suggestions;
 
@@ -378,7 +396,7 @@ RecoverySuggester::generate_generic_suggestions(
 
 RecoverySuggester::RecoveryAction
 RecoverySuggester::create_restore_files_action(
-    int64_t snapshot_id, const std::vector<std::string> &changed_files,
+    int64_t snapshot_id, const std::vector<std::string> &/*changed_files*/,
     const std::string &reason) {
 
   RecoveryAction action;
@@ -512,8 +530,8 @@ bool RecoverySuggester::execute_restore_snapshot(const RecoveryAction &action,
   return restore_result.success;
 }
 
-bool RecoverySuggester::execute_clean_build(const RecoveryAction &action,
-                                             int64_t project_id,
+bool RecoverySuggester::execute_clean_build(const RecoveryAction &/*action*/,
+                                             int64_t /*project_id*/,
                                              RecoveryResult &result) {
   if (!executor_) {
     result.errors.push_back("No executor configured");
@@ -539,7 +557,7 @@ bool RecoverySuggester::execute_clean_build(const RecoveryAction &action,
 }
 
 bool RecoverySuggester::execute_custom_command(const RecoveryAction &action,
-                                                int64_t project_id,
+                                                int64_t /*project_id*/,
                                                 RecoveryResult &result) {
   if (!executor_) {
     result.errors.push_back("No executor configured");

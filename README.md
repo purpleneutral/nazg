@@ -36,7 +36,7 @@ advice.
 - **engine** – Boots logging (`blackbox`), configuration (`config::store`), persistence (`nexus`), registers
   commands, and dispatches the CLI or assistant mode.
 - **directive** – Command registry/dispatcher that modules use to expose new verbs (`nazg status`,
-  `nazg brain facts`, etc.).
+  `nazg build_facts`, etc.).
 - **brain** – Detects project context, computes filesystem snapshots, plans actions, and records events/facts.
 - **nexus** – SQLite-backed store for projects, snapshots, runs, events, and persistent facts.
 - **system** – Cross-platform helpers for filesystem utilities, process execution, package installation, and
@@ -78,7 +78,7 @@ The primary binary is produced at `build/nazg` (or `build/bin/nazg` depending on
 
 - `./build/nazg` – Launch interactive assistant mode that inspects the current directory and suggests actions.
 - `./build/nazg status` – Print a quick project summary (language, build system, git status, etc.).
-- `./build/nazg brain facts` – Inspect stored facts for the current project.
+- `./build/nazg build_facts` – Inspect stored facts for the current project.
 - `./build/nazg update --help` – Build or rollback Nazg itself using the updater module.
 
 ### Usage Examples
@@ -112,6 +112,8 @@ Upstream   : origin/feature/bot-framework
 Divergence : 2 ahead, 1 behind
 Changes    : 3 modified, 0 staged, 1 untracked
 ```
+
+> **New to nazg?** See the [Quickstart Guide](docs/quickstart.md) for a 60-second introduction.
 
 ### Configuration & Data
 

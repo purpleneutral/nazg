@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "brain/learner.hpp"
 #include "brain/pattern_matcher.hpp"
 #include "blackbox/logger.hpp"
@@ -12,11 +30,9 @@ namespace nazg::brain {
 Learner::Learner(nexus::Store *store, workspace::Manager *workspace_mgr,
                  blackbox::logger *log)
     : store_(store), workspace_mgr_(workspace_mgr), log_(log),
-      pattern_matcher_(new PatternMatcher(store, log)) {}
+      pattern_matcher_(std::make_unique<PatternMatcher>(store, log)) {}
 
-Learner::~Learner() {
-  delete pattern_matcher_;
-}
+Learner::~Learner() = default;
 
 int64_t Learner::record_failure(int64_t project_id,
                                  const FailureContext &context) {
@@ -458,6 +474,6 @@ std::string Learner::tags_to_json(const std::vector<std::string> &tags) {
   return json.str();
 }
 
-PatternMatcher *Learner::pattern_matcher() { return pattern_matcher_; }
+PatternMatcher *Learner::pattern_matcher() { return pattern_matcher_.get(); }
 
 } // namespace nazg::brain

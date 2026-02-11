@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #pragma once
 
 #include "tui/managers/command_manager.hpp"
@@ -17,7 +35,7 @@ class logger;
 }
 
 namespace nazg::config {
-struct store;
+class store;
 }
 
 namespace nazg::tui {
@@ -196,6 +214,10 @@ public:
 private:
   friend class TUIApp;
 
+  // External dependencies (declared first: used by manager constructors)
+  nazg::blackbox::logger* log_ = nullptr;
+  nazg::config::store* cfg_ = nullptr;
+
   // Managers
   KeyManager key_manager_;
   ModeManager mode_manager_;
@@ -219,9 +241,6 @@ private:
   ComponentBase* focused_component_ = nullptr;
   mutable std::mutex focus_mutex_;
 
-  // External dependencies
-  nazg::blackbox::logger* log_ = nullptr;
-  nazg::config::store* cfg_ = nullptr;
   ftxui::ScreenInteractive* screen_ = nullptr;
 
   /**

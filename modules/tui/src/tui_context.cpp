@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "tui/tui_context.hpp"
 #include "blackbox/logger.hpp"
 #include "config/config.hpp"
@@ -47,7 +65,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("kill-window", "Close current window", [](auto& ctx, auto& args) {
+  command_manager_.register_command("kill-window", "Close current window", [](auto& ctx, [[maybe_unused]] auto& args) {
     if (ctx.close_active_window()) {
       ctx.set_status_message("Closed window");
       return true;
@@ -56,7 +74,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("next-window", "Switch to next window", [](auto& ctx, auto& args) {
+  command_manager_.register_command("next-window", "Switch to next window", [](auto& ctx, [[maybe_unused]] auto& args) {
     if (ctx.focus_next_window()) {
       ctx.set_status_message("Next window");
       return true;
@@ -65,7 +83,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("previous-window", "Switch to previous window", [](auto& ctx, auto& args) {
+  command_manager_.register_command("previous-window", "Switch to previous window", [](auto& ctx, [[maybe_unused]] auto& args) {
     if (ctx.focus_previous_window()) {
       ctx.set_status_message("Previous window");
       return true;
@@ -74,7 +92,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("last-window", "Switch to last window", [](auto& ctx, auto& args) {
+  command_manager_.register_command("last-window", "Switch to last window", [](auto& ctx, [[maybe_unused]] auto& args) {
     if (ctx.focus_last_window()) {
       ctx.set_status_message("Last window");
       return true;
@@ -131,7 +149,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("kill-pane", "Close current pane", [](auto& ctx, auto& args) {
+  command_manager_.register_command("kill-pane", "Close current pane", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.log_info("[kill-pane] Command invoked");
     Window* win = ctx.active_window();
     if (!win) {
@@ -151,7 +169,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("save-layout", "Save window layout", [](auto& ctx, auto& args) {
+  command_manager_.register_command("save-layout", "Save window layout", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) {
       ctx.set_status_message("No active window");
@@ -167,7 +185,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("restore-layout", "Restore saved window layout", [](auto& ctx, auto& args) {
+  command_manager_.register_command("restore-layout", "Restore saved window layout", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) {
       ctx.set_status_message("No active window");
@@ -183,7 +201,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("toggle-zoom", "Toggle pane zoom", [](auto& ctx, auto& args) {
+  command_manager_.register_command("toggle-zoom", "Toggle pane zoom", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) {
       ctx.set_status_message("No active window");
@@ -198,7 +216,7 @@ void TUIContext::initialize() {
   });
 
   // Navigation commands
-  command_manager_.register_command("navigate-left", "Navigate to pane on left", [](auto& ctx, auto& args) {
+  command_manager_.register_command("navigate-left", "Navigate to pane on left", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) return false;
     if (win->navigate('h')) {
@@ -208,7 +226,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("navigate-right", "Navigate to pane on right", [](auto& ctx, auto& args) {
+  command_manager_.register_command("navigate-right", "Navigate to pane on right", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) return false;
     if (win->navigate('l')) {
@@ -218,7 +236,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("navigate-up", "Navigate to pane above", [](auto& ctx, auto& args) {
+  command_manager_.register_command("navigate-up", "Navigate to pane above", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) return false;
     if (win->navigate('k')) {
@@ -228,7 +246,7 @@ void TUIContext::initialize() {
     return false;
   });
 
-  command_manager_.register_command("navigate-down", "Navigate to pane below", [](auto& ctx, auto& args) {
+  command_manager_.register_command("navigate-down", "Navigate to pane below", [](auto& ctx, [[maybe_unused]] auto& args) {
     Window* win = ctx.active_window();
     if (!win) return false;
     if (win->navigate('j')) {
@@ -239,44 +257,44 @@ void TUIContext::initialize() {
   });
 
   // Mode commands
-  command_manager_.register_command("enter-insert-mode", "Enter insert mode", [](auto& ctx, auto& args) {
+  command_manager_.register_command("enter-insert-mode", "Enter insert mode", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.modes().enter(Mode::INSERT);
     ctx.set_status_message("INSERT mode");
     return true;
   });
 
-  command_manager_.register_command("enter-normal-mode", "Enter normal mode", [](auto& ctx, auto& args) {
+  command_manager_.register_command("enter-normal-mode", "Enter normal mode", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.modes().enter(Mode::NORMAL);
     ctx.set_status_message("NORMAL mode");
     return true;
   });
 
-  command_manager_.register_command("enter-visual-mode", "Enter visual mode", [](auto& ctx, auto& args) {
+  command_manager_.register_command("enter-visual-mode", "Enter visual mode", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.modes().enter(Mode::VISUAL);
     ctx.set_status_message("VISUAL mode");
     return true;
   });
 
-  command_manager_.register_command("enter-command-mode", "Enter command mode", [](auto& ctx, auto& args) {
+  command_manager_.register_command("enter-command-mode", "Enter command mode", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.modes().enter(Mode::COMMAND);
     ctx.set_status_message("COMMAND mode");
     return true;
   });
 
-  command_manager_.register_command("command-mode", "Enter command mode", [](auto& ctx, auto& args) {
+  command_manager_.register_command("command-mode", "Enter command mode", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.modes().enter(Mode::COMMAND);
     ctx.set_status_message("COMMAND mode");
     return true;
   });
 
-  command_manager_.register_command("copy-mode", "Enter copy/visual mode", [](auto& ctx, auto& args) {
+  command_manager_.register_command("copy-mode", "Enter copy/visual mode", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.modes().enter(Mode::VISUAL);
     ctx.set_status_message("VISUAL mode");
     return true;
   });
 
   // Application commands
-  command_manager_.register_command("quit", "Quit application", [](auto& ctx, auto& args) {
+  command_manager_.register_command("quit", "Quit application", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.set_quit_flag();
     if (ctx.screen().ExitLoopClosure()) {
       ctx.screen().ExitLoopClosure()();
@@ -285,7 +303,7 @@ void TUIContext::initialize() {
   });
 
   // Alias :q for :quit
-  command_manager_.register_command("q", "Quit application (alias for :quit)", [](auto& ctx, auto& args) {
+  command_manager_.register_command("q", "Quit application (alias for :quit)", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.set_quit_flag();
     if (ctx.screen().ExitLoopClosure()) {
       ctx.screen().ExitLoopClosure()();
@@ -293,7 +311,7 @@ void TUIContext::initialize() {
     return true;
   });
 
-  command_manager_.register_command("help", "Show help", [](auto& ctx, auto& args) {
+  command_manager_.register_command("help", "Show help", [](auto& ctx, [[maybe_unused]] auto& args) {
     std::string help = ctx.keys().help_text() + "\n" + ctx.commands().help_text();
     ctx.set_status_message("See logs for help text");
     ctx.log_info("=== HELP ===\n" + help);
@@ -323,7 +341,7 @@ void TUIContext::initialize() {
     return true;
   });
 
-  command_manager_.register_command("back", "Go back to previous menu", [](auto& ctx, auto& args) {
+  command_manager_.register_command("back", "Go back to previous menu", [](auto& ctx, [[maybe_unused]] auto& args) {
     if (!ctx.menus().back()) {
       ctx.set_status_message("Cannot go back");
       return false;
@@ -332,7 +350,7 @@ void TUIContext::initialize() {
     return true;
   });
 
-  command_manager_.register_command("forward", "Go forward to next menu", [](auto& ctx, auto& args) {
+  command_manager_.register_command("forward", "Go forward to next menu", [](auto& ctx, [[maybe_unused]] auto& args) {
     if (!ctx.menus().forward()) {
       ctx.set_status_message("Cannot go forward");
       return false;
@@ -341,7 +359,7 @@ void TUIContext::initialize() {
     return true;
   });
 
-  command_manager_.register_command("menus", "List all registered menus", [](auto& ctx, auto& args) {
+  command_manager_.register_command("menus", "List all registered menus", [](auto& ctx, [[maybe_unused]] auto& args) {
     auto list = ctx.menus().list_registered();
     std::string msg = "Registered menus: ";
     for (size_t i = 0; i < list.size(); ++i) {
@@ -353,7 +371,7 @@ void TUIContext::initialize() {
     return true;
   });
 
-  command_manager_.register_command("home", "Exit menu and return to welcome screen", [](auto& ctx, auto& args) {
+  command_manager_.register_command("home", "Exit menu and return to welcome screen", [](auto& ctx, [[maybe_unused]] auto& args) {
     ctx.menus().clear_stack();
     ctx.set_status_message("Welcome");
     return true;
@@ -440,7 +458,6 @@ bool TUIContext::close_window(Window* window) {
     return false;
   }
 
-  int index = static_cast<int>(std::distance(windows_.begin(), it));
   windows_.erase(it);
 
   // Adjust active index

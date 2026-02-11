@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "prompt/prompt.hpp"
 #include "blackbox/logger.hpp"
 #include "directive/context.hpp"
@@ -285,7 +303,7 @@ void Prompt::print_box_top(int width) {
   std::cout << "\n";
 }
 
-void Prompt::print_box_line(const std::string& content, int width) {
+void Prompt::print_box_line(const std::string& content, int /*width*/) {
   // Note: content may contain ANSI color codes, so we can't just use content.length()
   // For now, we'll just print it. TODO: Handle ANSI codes properly for padding.
   std::cout << "│ " << content << "\n";
@@ -299,7 +317,7 @@ void Prompt::print_box_separator(int width) {
   std::cout << "\n";
 }
 
-void Prompt::print_box_bottom(int width) {
+void Prompt::print_box_bottom(int /*width*/) {
   std::cout << "└─> ";
 }
 
@@ -337,7 +355,7 @@ int Prompt::read_choice(size_t num_options, int default_choice) {
   return -1;  // Invalid
 }
 
-std::string Prompt::read_line(const std::string& placeholder) {
+std::string Prompt::read_line(const std::string& /*placeholder*/) {
   std::string input;
   std::getline(std::cin, input);
   return input;

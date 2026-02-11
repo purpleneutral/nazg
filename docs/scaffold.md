@@ -66,7 +66,7 @@ Templates can be customised by editing the helper functions in `templates.hpp`.
 
 ## 5. Assistant & CLI Integration
 
-- CLI commands registered via `scaffold::register_commands` expose verbs such as `nazg scaffold cpp <name>`.
+- CLI commands registered via `scaffold::register_commands` expose verbs such as `nazg init cpp <name>`.
 - Assistant mode checks for empty directories and adds the action “🚀 Create a new project (C++/Python/C)”. When
   selected, it prompts for details and invokes the scaffold command under the hood.
 
@@ -107,7 +107,7 @@ Templates can be customised by editing the helper functions in `templates.hpp`.
 | “Directory already exists” | Target path conflicts with an existing folder when `in_place=false` | Choose another project name or remove the directory. |
 | Virtual environment creation failed | Missing `python3` or venv module | Install Python 3 with venv support; scaffold output remains usable without the venv. |
 | Files missing after scaffold | Template not updated for the selected language | Check `templates.hpp` and ensure language case handles every file. |
-| Assistant did not offer scaffolding | Directory not empty or detection skipped | Clear stray files or run `nazg scaffold` manually. |
+| Assistant did not offer scaffolding | Directory not empty or detection skipped | Clear stray files or run `nazg init` manually. |
 
 Scaffold is the first impression many users have of Nazg—keep templates polished and aligned with best
 practices so new projects start on the right foot.

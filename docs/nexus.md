@@ -35,8 +35,8 @@ auto events = store->get_events(id, 10);
 ```
 
 **Database Location:**
-- Default: `~/.local/share/nazg/nazg.db`
-- Override: `[nexus] db_path` in config or `XDG_DATA_HOME`
+- Default: `~/.local/state/nazg/nazg.db`
+- Override: `[nexus] db_path` in config or `XDG_STATE_HOME`
 
 ---
 
@@ -153,7 +153,7 @@ store->finish_bot_run(run_id, "warning", exit_code, duration_ms);
 
 ## 6. Configuration & Paths
 
-Default location: `~/.local/share/nazg/nexus.db` (or `$XDG_DATA_HOME/nazg/nexus.db`). Override via config:
+Default location: `~/.local/state/nazg/nazg.db` (or `$XDG_STATE_HOME/nazg/nazg.db`). Override via config:
 
 ```toml
 [nexus]
@@ -182,7 +182,7 @@ Migrations are applied sequentially; ensure each file is idempotent and safe to 
 - All major operations log success/failure when a logger is supplied. Run `nazg --verbose` to inspect database
   messages on the console.
 - Use `store->prune_events` and `store->prune_commands` to limit history size if the database grows quickly.
-- For manual inspection, open the database with `sqlite3 ~/.local/share/nazg/nexus.db` and explore tables.
+- For manual inspection, open the database with `sqlite3 ~/.local/state/nazg/nazg.db` and explore tables.
 
 ---
 

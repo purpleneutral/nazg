@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "docker_monitor/client.hpp"
 #include "agent/protocol.hpp"
 #include "blackbox/logger.hpp"
@@ -91,6 +109,9 @@ bool Client::send_message_to_agent(const ::nazg::bot::HostConfig &host,
     return false;
   }
 
+  // Reject oversized payloads (max 16 MB)
+  constexpr std::uint32_t max_payload = 16u * 1024u * 1024u;
+
   // Read HelloAck
   Header ack_header{};
   std::string ack_payload;
@@ -107,6 +128,10 @@ bool Client::send_message_to_agent(const ::nazg::bot::HostConfig &host,
       header_bytes += static_cast<std::size_t>(received);
     }
 
+    if (ack_header.payload_size > max_payload) {
+      ::close(fd);
+      return false;
+    }
     if (ack_header.payload_size > 0) {
       ack_payload.resize(ack_header.payload_size);
       std::size_t offset = 0;
@@ -150,6 +175,10 @@ bool Client::send_message_to_agent(const ::nazg::bot::HostConfig &host,
       header_bytes += static_cast<std::size_t>(received);
     }
 
+    if (response_header.payload_size > max_payload) {
+      ::close(fd);
+      return false;
+    }
     if (response_header.payload_size > 0) {
       response.resize(response_header.payload_size);
       std::size_t offset = 0;
@@ -282,10 +311,6 @@ bool Client::parse_and_store_scan(int64_t server_id,
   if (!store_) {
     return false;
   }
-
-  auto now = std::chrono::system_clock::now();
-  auto scan_time = std::chrono::duration_cast<std::chrono::seconds>(
-                     now.time_since_epoch()).count();
 
   if (log_) {
     log_->info("docker_monitor", "Parsing Docker scan from " + server_label +

@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "bot/transport.hpp"
 
 #include "agent/protocol.hpp"
@@ -49,7 +67,7 @@ std::string SSHTransport::build_ssh_prefix() const {
 
   // Add common SSH options for non-interactive use
   oss << " -o BatchMode=yes";           // Never ask for password
-  oss << " -o StrictHostKeyChecking=no"; // Accept unknown hosts (bot use case)
+  oss << " -o StrictHostKeyChecking=accept-new"; // Trust on first use
   oss << " -o ConnectTimeout=10";       // 10 second timeout
 
   // Add target host
@@ -276,6 +294,12 @@ bool AgentTransport::execute_script(const std::string &script, int &exit_code,
 
     if (hdr.payload_size == 0) {
       return true;
+    }
+
+    // Reject oversized payloads (max 16 MB)
+    constexpr std::uint32_t max_payload = 16u * 1024u * 1024u;
+    if (hdr.payload_size > max_payload) {
+      return false;
     }
 
     body.resize(hdr.payload_size);

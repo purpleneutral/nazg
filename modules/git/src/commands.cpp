@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "git/commands.hpp"
 #include "directive/context.hpp"
 #include "directive/registry.hpp"
@@ -220,7 +238,7 @@ static int cmd_git_init(const directive::command_context &ctx,
 }
 
 // nazg git status - Show git status
-static int cmd_git_status(const directive::command_context &ctx,
+static int cmd_git_status(const directive::command_context &/*ctx*/,
                           const directive::context &ectx) {
   std::string cwd = get_cwd();
   git::Client client(cwd, ectx.log);
@@ -419,7 +437,7 @@ static int cmd_git_add(const directive::command_context &ctx,
 
 // nazg git clone - Clone a repository
 static int cmd_git_clone(const directive::command_context &ctx,
-                         const directive::context &ectx) {
+                         const directive::context &/*ectx*/) {
   if (ctx.argc < 3) {
     std::cerr << "Usage: nazg git clone <url> [directory]\n";
     return 1;
@@ -699,7 +717,7 @@ static int cmd_git_checkout(const directive::command_context &ctx,
 }
 
 // nazg git sync - Push to all remotes
-static int cmd_git_sync(const directive::command_context &ctx,
+static int cmd_git_sync(const directive::command_context &/*ctx*/,
                         const directive::context &ectx) {
   std::string cwd = get_cwd();
   git::Client client(cwd, ectx.log);
@@ -1994,7 +2012,7 @@ static int cmd_git_root(const directive::command_context& ctx,
   return 2;
 }
 
-void register_commands(directive::registry &reg, const directive::context &ctx) {
+void register_commands(directive::registry &reg, const directive::context &/*ctx*/) {
   // Hierarchical git command (new style: "nazg git <subcommand>")
   reg.add("git", "Git repository and server management", cmd_git_root);
 

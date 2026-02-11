@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "agent/docker_scanner.hpp"
 #include "blackbox/logger.hpp"
 
@@ -11,6 +29,7 @@
 #include <iomanip>
 #include <sstream>
 #include <filesystem>
+#include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -384,16 +403,12 @@ std::string DockerScanner::calculate_file_hash(const std::string &file_path) {
     return "";
   }
 
-  SHA256_CTX ctx;
-  SHA256_Init(&ctx);
-
-  char buffer[8192];
-  while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
-    SHA256_Update(&ctx, buffer, file.gcount());
-  }
+  std::string data((std::istreambuf_iterator<char>(file)),
+                    std::istreambuf_iterator<char>());
 
   unsigned char hash[SHA256_DIGEST_LENGTH];
-  SHA256_Final(hash, &ctx);
+  unsigned int len = SHA256_DIGEST_LENGTH;
+  EVP_Digest(data.c_str(), data.size(), hash, &len, EVP_sha256(), nullptr);
 
   std::ostringstream oss;
   oss << std::hex << std::setfill('0');

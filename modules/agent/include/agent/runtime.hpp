@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #pragma once
 
 #include "agent/protocol.hpp"
@@ -25,7 +43,11 @@ struct Options {
   std::string db_path = "/var/lib/nazg-agent/agent.db";
   int scan_interval_seconds = 60;  // Scan every 60 seconds
   bool enable_docker_monitoring = true;
+  std::string auth_token;  // Required for client authentication
 };
+
+// Maximum payload size accepted from the network (16 MB)
+static constexpr std::uint32_t MAX_PAYLOAD_SIZE = 16u * 1024u * 1024u;
 
 class Runtime {
 public:

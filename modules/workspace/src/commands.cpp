@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "workspace/commands.hpp"
 #include "directive/context.hpp"
 #include "directive/registry.hpp"
@@ -147,12 +165,10 @@ static int cmd_workspace_history(const directive::command_context &cmd_ctx,
   }
   // Parse options
   int limit = 20;
-  bool all = false;
   bool tagged = false;
 
   for (size_t i = 0; i < args.size(); ++i) {
     if (args[i] == "--all") {
-      all = true;
       limit = 1000;
     } else if (args[i] == "--tagged") {
       tagged = true;
@@ -674,8 +690,8 @@ static int cmd_workspace_restore(const directive::command_context &cmd_ctx,
   return 1;
 }
 
-static int cmd_workspace_tag(const directive::command_context &cmd_ctx,
-                              const directive::context &ctx) {
+static int cmd_workspace_tag(const directive::command_context &/*cmd_ctx*/,
+                              const directive::context &/*ctx*/) {
   std::cout << "nazg workspace tag - not implemented yet\n";
   return 1;
 }
@@ -865,7 +881,7 @@ static int cmd_workspace_root(const directive::command_context &cmd_ctx,
 }
 
 void register_commands(nazg::directive::registry &reg,
-                       nazg::directive::context &ctx) {
+                       nazg::directive::context &/*ctx*/) {
   reg.add("workspace", "Workspace state management (time machine)",
           cmd_workspace_root);
 }

@@ -1,3 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 purpleneutral
+//
+// This file is part of nazg.
+//
+// nazg is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// nazg is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along
+// with nazg. If not, see <https://www.gnu.org/licenses/>.
+
 #include "bot/commands.hpp"
 #include "bot/registry.hpp"
 #include "bot/types.hpp"
@@ -1369,12 +1387,11 @@ static int cmd_bot_setup(const directive::command_context& ctx,
   std::ostringstream ssh_config;
   ssh_config << "{\"key\":\"" << ssh_key_path << "\",\"port\":" << host.ssh_port << "}";
 
-  int64_t host_id = 0;
   if (auto existing_id = ectx.store->get_bot_host_id(host.label)) {
-    host_id = *existing_id;
+    (void)*existing_id;
     std::cout << "\n✓ Updated existing host configuration\n";
   } else {
-    host_id = ectx.store->add_bot_host(host.label, host.address, ssh_config.str());
+    ectx.store->add_bot_host(host.label, host.address, ssh_config.str());
     std::cout << "\n✓ Host configuration saved\n";
   }
 
