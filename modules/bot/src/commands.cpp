@@ -1258,7 +1258,12 @@ static int cmd_bot_setup(const directive::command_context& ctx,
 
   // Step 1: Check/generate SSH key
   if (ssh_key_path.empty()) {
-    ssh_key_path = std::string(std::getenv("HOME")) + "/.ssh/id_ed25519";
+    const char *home = std::getenv("HOME");
+    if (!home) {
+      std::cerr << "Error: HOME environment variable is not set\n";
+      return 1;
+    }
+    ssh_key_path = std::string(home) + "/.ssh/id_ed25519";
   }
 
   namespace fs = std::filesystem;
@@ -1302,9 +1307,10 @@ static int cmd_bot_setup(const directive::command_context& ctx,
 
   std::ostringstream ssh_copy_cmd;
   std::ostringstream ssh_copy_display;
-  ssh_copy_cmd << "sshpass -p " << ::nazg::system::shell_quote(password)
-               << " ssh-copy-id -o StrictHostKeyChecking=no";
-  ssh_copy_display << "sshpass -p '***' ssh-copy-id -o StrictHostKeyChecking=no";
+  // Use SSHPASS env var instead of -p to keep password out of process listings
+  ssh_copy_cmd << "SSHPASS=" << ::nazg::system::shell_quote(password)
+               << " sshpass -e ssh-copy-id -o StrictHostKeyChecking=no";
+  ssh_copy_display << "SSHPASS='***' sshpass -e ssh-copy-id -o StrictHostKeyChecking=no";
 
   ssh_copy_cmd << " -i " << ::nazg::system::shell_quote(ssh_key_path);
   ssh_copy_display << " -i " << ::nazg::system::shell_quote(ssh_key_path);

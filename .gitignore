@@ -31,6 +31,27 @@ package-lock.json
 __pycache__/
 *.pyc
 
+# Secrets & credentials
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+*.keystore
+*.jks
+*.ppk
+
+# SSH keys
+id_rsa*
+id_ed25519*
+id_dsa*
+
+# Databases (may contain sensitive data)
+*.db
+*.sqlite
+*.sqlite3
+
 # AI tooling
 .claude/
 

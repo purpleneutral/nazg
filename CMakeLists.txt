@@ -71,7 +71,7 @@ add_nazg_module(prompt blackbox directive)           # Interactive prompts
 target_link_libraries(system PUBLIC prompt)          # System uses prompt for UI
 target_link_libraries(prompt PUBLIC system)          # Prompt uses system for terminal detection (circular but OK in CMake)
 add_nazg_module(nexus blackbox config)               # Database persistence
-target_link_libraries(nexus PUBLIC SQLite::SQLite3)
+target_link_libraries(nexus PUBLIC SQLite::SQLite3 crypto)
 add_nazg_module(brain nexus blackbox directive)      # Intelligence (detection, snapshot, planning)
 target_link_libraries(brain PUBLIC crypto)           # For SHA256 in snapshot
 add_nazg_module(task system blackbox nexus brain)    # Task execution (uses brain types)

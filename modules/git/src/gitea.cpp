@@ -464,11 +464,10 @@ bool GiteaServer::initialize_database() {
     return false;
   }
 
-  // Create admin user
-  admin_password_ = generate_random_password();
+  // Create admin user with --random-password to avoid exposing password in
+  // process listings (the password would otherwise be visible via /proc/cmdline)
   cmd = "cd /var/lib/gitea && sudo -u git /usr/local/bin/gitea admin user create "
-        "--admin --username admin --password " +
-        nazg::system::shell_quote(admin_password_) + " "
+        "--admin --username admin --random-password --random-password-length 24 "
         "--email admin@" + config_.host +
         " --must-change-password=false 2>&1";
 
@@ -486,6 +485,19 @@ bool GiteaServer::initialize_database() {
 
   if (already_exists) {
     admin_password_.clear();
+  } else if (created) {
+    // Extract the generated password from gitea output
+    auto pw_pos = output.find("generated random password is '");
+    if (pw_pos != std::string::npos) {
+      pw_pos += 30;
+      auto end_pos = output.find('\'', pw_pos);
+      if (end_pos != std::string::npos) {
+        admin_password_ = output.substr(pw_pos, end_pos - pw_pos);
+      }
+    }
+    if (admin_password_.empty() && log_) {
+      log_->warn("Git/gitea", "Could not extract random password from gitea output");
+    }
   }
 
   if (log_) {

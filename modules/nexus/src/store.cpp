@@ -17,10 +17,13 @@
 // with nazg. If not, see <https://www.gnu.org/licenses/>.
 
 #include "nexus/store.hpp"
+#include "nexus/crypto.hpp"
 #include "nexus/migrator.hpp"
 #include "nexus/sqlite_driver.hpp"
 #include "blackbox/logger.hpp"
 #include <chrono>
+#include <iomanip>
+#include <random>
 #include <sstream>
 
 namespace nazg::nexus {
@@ -70,6 +73,27 @@ bool Store::initialize() {
 
   log_info("Store initialized (version " +
            std::to_string(mig.current_version()) + ")");
+
+  // Load or create encryption salt for token encryption
+  auto salt_result = conn_->query(
+      "SELECT value FROM nazg_metadata WHERE key = 'encryption_salt' LIMIT 1;");
+  if (salt_result.ok && !salt_result.rows.empty()) {
+    encryption_salt_ = salt_result.rows[0].get("value").value_or("");
+  }
+  if (encryption_salt_.empty()) {
+    // Generate a random 16-byte salt and store it
+    std::random_device rd;
+    std::ostringstream oss;
+    for (int i = 0; i < 16; ++i) {
+      oss << std::hex << std::setfill('0') << std::setw(2)
+          << (rd() & 0xFF);
+    }
+    encryption_salt_ = oss.str();
+    conn_->execute(
+        "INSERT OR IGNORE INTO nazg_metadata (key, value) "
+        "VALUES ('encryption_salt', ?);",
+        {encryption_salt_});
+  }
 
   last_init_error_.clear();
   return true;
@@ -1004,7 +1028,8 @@ std::optional<GitServer> Store::get_git_server(const std::string &label) {
   server.config_modified = row.get_int("config_modified").value_or(0);
   server.created_at = row.get_int("created_at").value_or(0);
   server.updated_at = row.get_int("updated_at").value_or(0);
-  server.admin_token = row.get("admin_token").value_or("");
+  auto raw_token = row.get("admin_token").value_or("");
+  server.admin_token = decrypt_token(raw_token, encryption_salt_).value_or("");
   return server;
 }
 
@@ -1050,7 +1075,8 @@ std::vector<GitServer> Store::list_git_servers() {
     server.config_modified = row.get_int("config_modified").value_or(0);
     server.created_at = row.get_int("created_at").value_or(0);
     server.updated_at = row.get_int("updated_at").value_or(0);
-    server.admin_token = row.get("admin_token").value_or("");
+    auto raw_token = row.get("admin_token").value_or("");
+    server.admin_token = decrypt_token(raw_token, encryption_salt_).value_or("");
     servers.push_back(std::move(server));
   }
 
@@ -1093,6 +1119,10 @@ bool Store::upsert_git_server(const GitServer &server) {
       "updated_at = excluded.updated_at, "
       "admin_token = excluded.admin_token;";
 
+  std::string stored_token = server.admin_token.empty()
+      ? std::string()
+      : encrypt_token(server.admin_token, encryption_salt_);
+
   bool ok = conn_->execute(sql,
                            {server.label,
                             server.type,
@@ -1110,7 +1140,7 @@ bool Store::upsert_git_server(const GitServer &server) {
                             std::to_string(config_modified),
                             std::to_string(created),
                             std::to_string(updated),
-                            server.admin_token});
+                            stored_token});
 
   if (!ok && log_) {
     log_->error("Nexus", "Failed to upsert git server '" + server.label +
@@ -1197,10 +1227,14 @@ bool Store::update_git_server_admin_token(const std::string &label,
     return false;
   }
 
+  std::string stored_token = token.empty()
+      ? std::string()
+      : encrypt_token(token, encryption_salt_);
+
   int64_t now = now_timestamp();
   bool ok = conn_->execute(
       "UPDATE git_servers SET admin_token = ?, updated_at = ? WHERE label = ?;",
-      {token, std::to_string(now), label});
+      {stored_token, std::to_string(now), label});
 
   if (!ok && log_) {
     log_->error("Nexus",

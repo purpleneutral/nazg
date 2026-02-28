@@ -231,7 +231,7 @@ The architecture is solid, the UI is working, and the intelligence is there. Jus
 
 ```bash
 # Test CLI
-cd /home/tux/projects/cpp/nazg/build
+cd build
 ./nazg docker server list
 ./nazg docker stack list testBox
 

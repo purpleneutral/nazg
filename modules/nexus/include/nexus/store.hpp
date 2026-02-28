@@ -491,6 +491,7 @@ private:
   std::unique_ptr<Connection> conn_;
   nazg::blackbox::logger *log_ = nullptr;
   std::string last_init_error_;
+  std::string encryption_salt_;
 
   void log_debug(const std::string &msg) const;
   void log_info(const std::string &msg) const;

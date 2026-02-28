@@ -22,6 +22,7 @@
 #include "system/process.hpp"
 
 #include <algorithm>
+#include <string.h>
 #include <array>
 #include <cctype>
 #include <cstdio>
@@ -132,7 +133,9 @@ bool looks_like_docker_permission_issue(const std::string &text) {
 }
 
 void zero_string(std::string &value) {
-  std::fill(value.begin(), value.end(), '\0');
+  if (!value.empty()) {
+    explicit_bzero(&value[0], value.size());
+  }
 }
 
 } // namespace

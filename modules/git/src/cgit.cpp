@@ -26,6 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <array>
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 
@@ -298,12 +299,21 @@ bool CgitServer::setup_web_server() {
   // Generate complete nginx configuration
   std::string nginx_conf = generate_nginx_config();
 
-  // Write to temp file
-  std::string tmp_conf = "/tmp/nazg-cgit-nginx.conf";
-  std::ofstream out(tmp_conf);
-  if (!out) {
+  // Write to temp file (mkstemp for safe unique path)
+  std::string tmp_conf = (fs::temp_directory_path() / "nazg-cgit-nginx-XXXXXX").string();
+  int conf_fd = ::mkstemp(&tmp_conf[0]);
+  if (conf_fd < 0) {
     if (log_) {
       log_->error("Git/cgit", "Failed to create temp nginx config");
+    }
+    return false;
+  }
+  ::close(conf_fd);
+  std::ofstream out(tmp_conf);
+  if (!out) {
+    fs::remove(tmp_conf);
+    if (log_) {
+      log_->error("Git/cgit", "Failed to write temp nginx config");
     }
     return false;
   }
@@ -311,7 +321,8 @@ bool CgitServer::setup_web_server() {
   out.close();
 
   // Upload to remote
-  if (!upload_file(tmp_conf, "/tmp/nazg-cgit-nginx.conf")) {
+  std::string remote_conf = "/tmp/" + fs::path(tmp_conf).filename().string();
+  if (!upload_file(tmp_conf, remote_conf)) {
     fs::remove(tmp_conf);
     return false;
   }
@@ -327,13 +338,13 @@ bool CgitServer::setup_web_server() {
     if (log_) {
       log_->debug("Git/cgit", "Using Arch-style nginx config (conf.d/)");
     }
-    ok = ssh_exec("sudo mv /tmp/nazg-cgit-nginx.conf /etc/nginx/conf.d/cgit.conf");
+    ok = ssh_exec("sudo mv " + remote_conf + " /etc/nginx/conf.d/cgit.conf");
   } else {
     // Debian style: /etc/nginx/sites-available/
     if (log_) {
       log_->debug("Git/cgit", "Using Debian-style nginx config (sites-available/)");
     }
-    ok = ssh_exec("sudo mv /tmp/nazg-cgit-nginx.conf /etc/nginx/sites-available/cgit");
+    ok = ssh_exec("sudo mv " + remote_conf + " /etc/nginx/sites-available/cgit");
     ok = ok && ssh_exec("sudo ln -sf /etc/nginx/sites-available/cgit /etc/nginx/sites-enabled/cgit");
   }
 
@@ -564,21 +575,25 @@ bool CgitServer::configure() {
   // Generate cgitrc
   std::string cgitrc = generate_cgitrc(repo_names);
 
-  // Write to temp file
-  std::string tmp_path = "/tmp/cgitrc";
+  // Write to temp file (mkstemp for safe unique path)
+  std::string tmp_path = (fs::temp_directory_path() / "nazg-cgitrc-XXXXXX").string();
+  int cgitrc_fd = ::mkstemp(&tmp_path[0]);
+  if (cgitrc_fd < 0) return false;
+  ::close(cgitrc_fd);
   std::ofstream out(tmp_path);
-  if (!out) return false;
+  if (!out) { fs::remove(tmp_path); return false; }
   out << cgitrc;
   out.close();
 
   // Upload
-  if (!upload_file(tmp_path, "/tmp/cgitrc")) {
+  std::string remote_cgitrc = "/tmp/" + fs::path(tmp_path).filename().string();
+  if (!upload_file(tmp_path, remote_cgitrc)) {
     fs::remove(tmp_path);
     return false;
   }
 
   // Install config
-  bool ok = ssh_exec("sudo mv /tmp/cgitrc " + config_.config_path);
+  bool ok = ssh_exec("sudo mv " + remote_cgitrc + " " + config_.config_path);
 
   // Clean up
   fs::remove(tmp_path);
@@ -804,12 +819,21 @@ bool CgitServer::deploy_ssh_key(const std::string& public_key_path) {
                          std::istreambuf_iterator<char>());
   key_file.close();
 
-  // Write key to temporary file
-  std::string tmp_key = "/tmp/nazg-git-key.pub";
-  std::ofstream tmp_file(tmp_key);
-  if (!tmp_file) {
+  // Write key to temporary file (mkstemp for safe unique path)
+  std::string tmp_key = (fs::temp_directory_path() / "nazg-git-key-XXXXXX.pub").string();
+  int key_fd = ::mkstemp(&tmp_key[0]);
+  if (key_fd < 0) {
     if (log_) {
       log_->error("Git/cgit", "Cannot create temporary key file");
+    }
+    return false;
+  }
+  ::close(key_fd);
+  std::ofstream tmp_file(tmp_key);
+  if (!tmp_file) {
+    fs::remove(tmp_key);
+    if (log_) {
+      log_->error("Git/cgit", "Cannot write temporary key file");
     }
     return false;
   }
@@ -817,16 +841,17 @@ bool CgitServer::deploy_ssh_key(const std::string& public_key_path) {
   tmp_file.close();
 
   // Upload key to remote
-  if (!upload_file(tmp_key, "/tmp/nazg-git-key.pub")) {
+  std::string remote_key = "/tmp/" + fs::path(tmp_key).filename().string();
+  if (!upload_file(tmp_key, remote_key)) {
     fs::remove(tmp_key);
     return false;
   }
 
   // Append to authorized_keys with proper permissions
   std::string deploy_cmd =
-    "sudo -u git sh -c 'cat /tmp/nazg-git-key.pub >> /srv/git/.ssh/authorized_keys' && "
+    "sudo -u git sh -c 'cat " + remote_key + " >> /srv/git/.ssh/authorized_keys' && "
     "sudo -u git chmod 600 /srv/git/.ssh/authorized_keys && "
-    "sudo rm /tmp/nazg-git-key.pub";
+    "sudo rm " + remote_key;
 
   bool ok = ssh_exec(deploy_cmd);
 
